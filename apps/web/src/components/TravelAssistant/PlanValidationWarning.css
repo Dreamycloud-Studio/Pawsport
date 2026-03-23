@@ -1,0 +1,101 @@
+.plan-validation-warning {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+.warning-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.warning-icon {
+    font-size: 1.5rem;
+}
+
+.warning-header h3 {
+    margin: 0;
+    color: #856404;
+    font-size: 1.2rem;
+}
+
+.warning-content {
+    color: #856404;
+    line-height: 1.6;
+}
+
+.warning-content p {
+    margin: 0.75rem 0;
+}
+
+.warning-list {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem 1rem 1rem 2rem;
+    margin: 1rem 0;
+    list-style-type: disc;
+}
+
+.warning-list li {
+    margin: 0.5rem 0;
+    color: #856404;
+}
+
+.warning-suggestion {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: #856404;
+    margin-top: 1rem;
+}
+
+.warning-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.retry-button, .dismiss-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.retry-button {
+    background: #ffc107;
+    color: #856404;
+}
+
+.retry-button:hover {
+    background: #ffb300;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.dismiss-button {
+    background: transparent;
+    color: #856404;
+    border: 2px solid #ffc107;
+}
+
+.dismiss-button:hover {
+    background: rgba(255, 193, 7, 0.1);
+}
+
+@media (max-width: 768px) {
+    .warning-actions {
+        flex-direction: column;
+    }
+
+    .retry-button, .dismiss-button {
+        width: 100%;
+    }
+}

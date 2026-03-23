@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Custom Properties for Brand Colors */
+:root {
+  --brand-orange: #fb923c;
+  --brand-pink: #f472b6;
+  --brand-purple: #c084fc;
+  --gradient-primary: linear-gradient(to right, #fb923c, #f472b6);
+  --gradient-hero: linear-gradient(to bottom right, #fdf2f8, #fed7aa, #fefce8);
+}
+
+/* Base styles */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+#root {
+  min-height: 100vh;
+}

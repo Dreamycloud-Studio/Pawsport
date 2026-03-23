@@ -1,0 +1,52 @@
+.create-post-form {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.create-post-form h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.post-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+
+.post-textarea:focus {
+    outline: none;
+    border-color: #ff6b35;
+}
+
+.optional-fields {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.optional-fields input {
+    flex: 1;
+}
+
+.login-prompt {
+    text-align: center;
+    color: #666;
+    font-size: 0.875rem;
+    padding: 0.5rem;
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+}

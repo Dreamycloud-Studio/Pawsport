@@ -1,19 +1,26 @@
 {
-  "name": "pawsport-serverless",
+  "name": "pawsport-monorepo",
   "version": "1.0.0",
-  "description": "Pawsport serverless backend on Vercel",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "description": "Pawsport monorepo — web, mobile, and shared core",
   "scripts": {
-    "build": "cd client && npm run build"
+    "dev:web": "turbo run dev --filter=web",
+    "dev:mobile": "turbo run start --filter=mobile",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.88",
     "@supabase/supabase-js": "^2.89.0",
     "@vercel/node": "^2.3.0",
     "ai": "^5.0.115",
-    "axios": "^1.13.2",
-    "typescript": "^4.1.2"
+    "axios": "^1.13.2"
   },
   "devDependencies": {
-    "@types/node": "^14.14.0"
+    "@types/node": "^14.14.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
   }
 }

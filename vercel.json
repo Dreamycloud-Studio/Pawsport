@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd client && npm install && npm run build",
-  "outputDirectory": "client/build",
-  "installCommand": "npm install",
+  "buildCommand": "cd apps/web && pnpm run build",
+  "outputDirectory": "apps/web/build",
+  "installCommand": "pnpm install",
   "rewrites": [
     {
       "source": "/api/(.*)",
