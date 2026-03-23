@@ -86,7 +86,9 @@ vercel --prod
 Set in Vercel Dashboard → Project Settings → Environment Variables:
 
 ```
-LLM_API_URL=https://your-llm-api.com/endpoint
+OPENAI_API_KEY=sk-your-key-here
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 ---

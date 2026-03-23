@@ -3,9 +3,10 @@
 This guide covers how to set up Pawsport locally for development and testing.
 
 ## Prerequisites
-- **Node.js** v14 or higher
+- **Node.js** v18 or higher
 - **npm** or **yarn**
 - **OpenAI API Key** ([Get one here](https://platform.openai.com/api-keys))
+- **Supabase Account** ([Sign up here](https://supabase.com))
 
 ## 1. Clone & Install
 
@@ -14,7 +15,7 @@ This guide covers how to set up Pawsport locally for development and testing.
 git clone https://github.com/yourusername/Pawsport.git
 cd Pawsport
 
-# Install root dependencies (for API functions)
+# Install root dependencies (for Vercel serverless functions)
 npm install
 
 # Install client dependencies
@@ -30,33 +31,29 @@ Create a `.env` file in the **root directory**:
 ```bash
 # Copy the example
 cp .env.example .env
-
-# Edit .env and add your OpenAI API key
-# OPENAI_API_KEY=sk-proj-your-key-here
 ```
 
-**Get your OpenAI API key:**
-1. Visit https://platform.openai.com/api-keys
-2. Sign up or log in
-3. Create a new secret key
-4. Copy and paste into `.env`
+**Required Variables:**
+- `OPENAI_API_KEY`: Your OpenAI secret key.
+- `SUPABASE_URL`: Your Supabase project URL.
+- `SUPABASE_ANON_KEY`: Your Supabase anonymous public key.
 
-> 💡 See [AI_SETUP.md](AI_SETUP.md) for detailed setup instructions
+> 💡 See [AI_SETUP.md](AI_SETUP.md) and [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for detailed setup instructions.
 
 ## 3. Run Development Server
 
-**Option A: With Vercel CLI (Recommended)**
+**Option A: Full-Stack (Recommended)**
 ```bash
-# Install Vercel CLI globally
+# Install Vercel CLI globally if you haven't
 npm install -g vercel
 
-# Start development server
+# Start development server (front-end + API)
 vercel dev
 
 # Open http://localhost:3000
 ```
 
-**Option B: Client Only (No AI features)**
+**Option B: Client Only (Static UI)**
 ```bash
 cd client
 npm start
@@ -66,20 +63,21 @@ npm start
 
 ## 🧪 Testing
 
-### Running Tests
+### Running Client Tests
 ```bash
 cd client
 npm test
 ```
 
-### API Endpoints
+### API Endpoints (Vercel Functions)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/chat` | POST | AI chat messages |
-| `/api/travel/checklist` | POST | Generate travel checklist |
-| `/api/travel/regulations` | POST | Get country regulations |
-| `/api/travel/documents` | POST | Explain documents |
-| `/api/community/posts` | GET/POST | Community posts |
+| `/api/chat` | POST | AI travel assistant chat |
+| `/api/travel/checklist` | POST | Generate pet travel checklist |
+| `/api/travel/regulations` | POST | Fetch country-specific rules |
+| `/api/travel/documents` | POST | Explain required forms |
+| `/api/community/posts` | GET/POST | Manage community posts |
 
-For more details on serverless architecture and deployment, see [DEPLOYMENT.md](DEPLOYMENT.md).
+For more details on serverless architecture and production deployment, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
