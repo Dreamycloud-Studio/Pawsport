@@ -1,0 +1,542 @@
+Pawsport — React Native Monorepo Setup
+Implementation instructions for coding AI — March 22, 2026
+
+OVERVIEW AND GOAL
+
+Set up a pnpm monorepo containing the existing Pawsport React web app and a new React Native (Expo) mobile app for iOS and Android. Both apps share business logic, API calls, TypeScript types, and utility functions via a shared core package. Do not rewrite or move the existing web app — integrate it into the monorepo structure around it.
+
+Target structure:
+pawsport/
+├── apps/
+│   ├── web/              (existing React app, moved here)
+│   └── mobile/           (new React Native + Expo app)
+├── packages/
+│   └── core/             (new shared TypeScript library)
+├── package.json          (workspace root)
+├── pnpm-workspace.yaml
+└── turbo.json
+
+---
+
+PART 1 — MONOREPO ROOT SETUP
+
+Prerequisites: Node.js 18+, pnpm 8+. Install pnpm globally if not present: npm install -g pnpm
+
+Step 1: Initialise the monorepo root
+
+At the repo root, create package.json:
+
+{
+  "name": "pawsport-monorepo",
+  "private": true,
+  "scripts": {
+    "dev:web": "turbo run dev --filter=web",
+    "dev:mobile": "turbo run start --filter=mobile",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  }
+}
+
+Step 2: Create pnpm-workspace.yaml at root:
+
+packages:
+  - "apps/*"
+  - "packages/*"
+
+Step 3: Create turbo.json at root:
+
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "build/**"]
+    },
+    "dev": { "cache": false, "persistent": true },
+    "start": { "cache": false, "persistent": true },
+    "lint": { "outputs": [] },
+    "type-check": { "outputs": [] }
+  }
+}
+
+Step 4: Create a root tsconfig.json:
+
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  }
+}
+
+---
+
+PART 2 — SHARED CORE PACKAGE
+
+Create packages/core/ from scratch. This package contains zero React, zero React Native, zero browser APIs — pure TypeScript only.
+
+Step 1: packages/core/package.json
+
+{
+  "name": "@pawsport/core",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
+
+Step 2: packages/core/tsconfig.json
+
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "lib": ["ES2020"]
+  },
+  "include": ["src"]
+}
+
+Step 3: Create packages/core/src/ with the following files:
+
+packages/core/src/types/index.ts — shared TypeScript interfaces:
+
+export interface Pet {
+  id: string;
+  name: string;
+  species: "dog" | "cat" | "other";
+  breed?: string;
+  dateOfBirth: string;
+  microchipNumber?: string;
+  ownerId: string;
+}
+
+export interface Trip {
+  id: string;
+  petId: string;
+  originCountry: string;
+  destinationCountry: string;
+  travelDate: string;
+  status: "planning" | "in_progress" | "completed";
+  createdAt: string;
+}
+
+export interface RegulationChunk {
+  chunkId: string;
+  content: string;
+  summary: string;
+  country: string;
+  petTypes: string[];
+  topic: "microchip" | "vaccine" | "titer_test" | "timeline" | "quarantine" | "paperwork" | "health_certificate" | "general";
+  sourceName: string;
+  sourceUrl: string;
+  lastUpdated: string;
+  similarity?: number;
+}
+
+export interface RagResponse {
+  answer: string;
+  sources: { name: string; url: string; topic: string }[];
+  chunks: RegulationChunk[];
+}
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  description: string;
+  deadline?: string;
+  completed: boolean;
+  topic: RegulationChunk["topic"];
+}
+
+packages/core/src/api/supabase.ts — Supabase client factory:
+
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+
+let client: SupabaseClient | null = null;
+
+export function getSupabaseClient(url: string, anonKey: string): SupabaseClient {
+  if (!client) {
+    client = createClient(url, anonKey);
+  }
+  return client;
+}
+
+packages/core/src/api/rag.ts — RAG query function used by both apps:
+
+import { RagResponse } from "../types";
+
+export async function queryRegulations(
+  question: string,
+  destinationCountry: string,
+  petType: string,
+  apiBaseUrl: string
+): Promise<RagResponse> {
+  const response = await fetch(`${apiBaseUrl}/api/rag/query`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, destinationCountry, petType }),
+  });
+  if (!response.ok) {
+    throw new Error(`RAG query failed: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+packages/core/src/utils/timeline.ts — shared timeline helpers:
+
+export interface TimelineEvent {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  topic: string;
+  urgent: boolean;
+}
+
+export function calculateTimeline(
+  travelDate: string,
+  requirements: string[]
+): TimelineEvent[] {
+  const travel = new Date(travelDate);
+  const events: TimelineEvent[] = [];
+
+  if (requirements.includes("rabies_vaccine")) {
+    const vaccineDeadline = new Date(travel);
+    vaccineDeadline.setDate(vaccineDeadline.getDate() - 180);
+    events.push({
+      id: "rabies-vaccine",
+      title: "Rabies vaccination",
+      description: "Must be administered at least 180 days before travel for titer test to be valid.",
+      dueDate: vaccineDeadline.toISOString().split("T")[0],
+      topic: "vaccine",
+      urgent: daysUntil(vaccineDeadline) < 14,
+    });
+  }
+
+  if (requirements.includes("health_certificate")) {
+    const certDeadline = new Date(travel);
+    certDeadline.setDate(certDeadline.getDate() - 10);
+    events.push({
+      id: "health-cert",
+      title: "Health certificate",
+      description: "Issued by accredited vet, valid within 10 days of travel.",
+      dueDate: certDeadline.toISOString().split("T")[0],
+      topic: "health_certificate",
+      urgent: daysUntil(certDeadline) < 7,
+    });
+  }
+
+  return events.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+}
+
+function daysUntil(date: Date): number {
+  return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+}
+
+packages/core/src/index.ts — barrel export:
+
+export * from "./types";
+export * from "./api/supabase";
+export * from "./api/rag";
+export * from "./utils/timeline";
+
+---
+
+PART 3 — MIGRATE EXISTING WEB APP
+
+Step 1: Move the existing web app into apps/web/. All existing files stay exactly as they are. Only changes needed:
+
+1. Update apps/web/package.json — add the name field and core dependency:
+   - Add: "name": "web"
+   - Add to dependencies: "@pawsport/core": "workspace:*"
+
+2. Update apps/web/tsconfig.json paths to resolve the core package:
+   Add to compilerOptions:
+   "paths": {
+     "@pawsport/core": ["../../packages/core/src/index.ts"]
+   }
+
+3. Replace any duplicated type definitions or API fetch functions in the web app with imports from @pawsport/core. For example:
+   - Remove local Pet/Trip interfaces, import from "@pawsport/core"
+   - Replace local fetchRegulations calls with queryRegulations from "@pawsport/core"
+
+Step 2: Verify the web app still builds: cd apps/web && pnpm dev
+
+---
+
+PART 4 — CREATE THE MOBILE APP
+
+Step 1: Scaffold the Expo app
+
+Run from the repo root:
+pnpm dlx create-expo-app apps/mobile --template tabs
+
+This creates an Expo Router app with tab navigation pre-configured.
+
+Step 2: apps/mobile/package.json — update name and add core dependency:
+
+{
+  "name": "mobile",
+  "dependencies": {
+    "@pawsport/core": "workspace:*",
+    "expo": "~51.0.0",
+    "expo-router": "~3.5.0",
+    "expo-notifications": "~0.28.0",
+    "expo-sqlite": "~14.0.0",
+    "expo-image-picker": "~15.0.0",
+    "expo-secure-store": "~13.0.0",
+    "react": "18.2.0",
+    "react-native": "0.74.0",
+    "@supabase/supabase-js": "^2.43.0"
+  }
+}
+
+Step 3: apps/mobile/tsconfig.json:
+
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@pawsport/core": ["../../packages/core/src/index.ts"],
+      "@/*": ["./*"]
+    }
+  }
+}
+
+Step 4: apps/mobile/app.json — configure the Expo app:
+
+{
+  "expo": {
+    "name": "Pawsport",
+    "slug": "pawsport",
+    "scheme": "pawsport",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pawsport.app"
+    },
+    "android": {
+      "package": "com.pawsport.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      "expo-sqlite",
+      ["expo-image-picker", { "photosPermission": "Allow Pawsport to attach photos of your pet documents." }]
+    ]
+  }
+}
+
+Step 5: Environment config — apps/mobile/.env.local:
+
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+EXPO_PUBLIC_API_BASE_URL=https://your-vercel-app.vercel.app
+
+Note: All Expo public env vars must be prefixed EXPO_PUBLIC_
+
+Step 6: apps/mobile/lib/supabase.ts — initialise Supabase for mobile:
+
+import { getSupabaseClient } from "@pawsport/core";
+import * as SecureStore from "expo-secure-store";
+
+const ExpoSecureStoreAdapter = {
+  getItem: (key: string) => SecureStore.getItemAsync(key),
+  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+};
+
+export const supabase = getSupabaseClient(
+  process.env.EXPO_PUBLIC_SUPABASE_URL!,
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+Step 7: Create the tab screens in apps/mobile/app/(tabs)/
+
+apps/mobile/app/(tabs)/_layout.tsx:
+
+import { Tabs } from "expo-router";
+
+export default function TabLayout() {
+  return (
+    <Tabs>
+      <Tabs.Screen name="index" options={{ title: "My Trips" }} />
+      <Tabs.Screen name="plan" options={{ title: "Plan Trip" }} />
+      <Tabs.Screen name="assistant" options={{ title: "Ask AI" }} />
+      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+    </Tabs>
+  );
+}
+
+apps/mobile/app/(tabs)/assistant.tsx — AI chat screen using shared RAG function:
+
+import { useState } from "react";
+import { View, Text, TextInput, Button, ScrollView, StyleSheet } from "react-native";
+import { queryRegulations, RagResponse } from "@pawsport/core";
+
+export default function AssistantScreen() {
+  const [question, setQuestion] = useState("");
+  const [country, setCountry] = useState("JP");
+  const [petType, setPetType] = useState("cat");
+  const [response, setResponse] = useState<RagResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleAsk() {
+    setLoading(true);
+    try {
+      const result = await queryRegulations(
+        question,
+        country,
+        petType,
+        process.env.EXPO_PUBLIC_API_BASE_URL!
+      );
+      setResponse(result);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <ScrollView style={styles.container}>
+      <TextInput
+        style={styles.input}
+        placeholder="Ask about pet travel regulations..."
+        value={question}
+        onChangeText={setQuestion}
+        multiline
+      />
+      <Button title={loading ? "Asking..." : "Ask"} onPress={handleAsk} disabled={loading} />
+      {response && (
+        <View style={styles.answer}>
+          <Text style={styles.answerText}>{response.answer}</Text>
+          {response.sources.map((s) => (
+            <Text key={s.url} style={styles.source}>Source: {s.name}</Text>
+          ))}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16 },
+  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 12, marginBottom: 12, minHeight: 80 },
+  answer: { marginTop: 16, padding: 12, backgroundColor: "#f5f5f5", borderRadius: 8 },
+  answerText: { fontSize: 16, lineHeight: 24 },
+  source: { fontSize: 12, color: "#666", marginTop: 8 },
+});
+
+Step 8: Push notification setup for deadline reminders.
+
+apps/mobile/lib/notifications.ts:
+
+import * as Notifications from "expo-notifications";
+import { TimelineEvent } from "@pawsport/core";
+
+export async function requestNotificationPermissions(): Promise<boolean> {
+  const { status } = await Notifications.requestPermissionsAsync();
+  return status === "granted";
+}
+
+export async function scheduleDeadlineNotifications(events: TimelineEvent[]): Promise<void> {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+  for (const event of events) {
+    const triggerDate = new Date(event.dueDate);
+    triggerDate.setDate(triggerDate.getDate() - 7);
+    if (triggerDate > new Date()) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: event.urgent ? "Urgent: " + event.title : event.title,
+          body: event.description,
+          data: { eventId: event.id },
+        },
+        trigger: { date: triggerDate },
+      });
+    }
+  }
+}
+
+---
+
+PART 5 — INSTALL AND RUN
+
+Step 1: Install all dependencies from repo root:
+pnpm install
+
+Step 2: Run the web app:
+pnpm dev:web
+
+Step 3: Run the mobile app:
+pnpm dev:mobile
+Then press i for iOS simulator or a for Android emulator.
+For physical device: install the Expo Go app and scan the QR code.
+
+Step 4: Build for production (EAS Build — Expo's cloud build service):
+pnpm add -g eas-cli
+eas login
+eas build --platform ios        (requires Apple Developer account)
+eas build --platform android    (produces .apk or .aab)
+
+---
+
+PART 6 — KEY IMPLEMENTATION NOTES FOR AI
+
+1. The @pawsport/core package uses workspace:* protocol — pnpm resolves this automatically. Do not publish it to npm.
+
+2. Metro bundler (React Native) does not support TypeScript path aliases out of the box. The tsconfig paths above work because Expo handles this via babel-plugin-module-resolver. Do not remove the paths config.
+
+3. All environment variables in the mobile app must be prefixed EXPO_PUBLIC_ to be accessible at runtime. Server-side secrets (ANTHROPIC_API_KEY, DATABASE_URL) never go in the mobile app — they stay in Vercel serverless functions.
+
+4. Supabase auth tokens on mobile should be stored in expo-secure-store (hardware-backed keychain/keystore), not AsyncStorage (unencrypted).
+
+5. The queryRegulations function in core hits the Vercel API, not Supabase or the Anthropic API directly. Mobile apps never call LLM APIs directly — always proxy through the Vercel backend.
+
+6. For offline checklist support, use expo-sqlite to mirror checklist items locally and sync on reconnect. The schema mirrors the trips and checklist_items tables in Supabase.
+
+7. When adding new shared logic, always put it in packages/core/src/ and export from index.ts. Never copy-paste the same function into both apps.
+
+---
+
+DELIVERABLES CHECKLIST
+
+[ ] pnpm-workspace.yaml created at root
+[ ] turbo.json created at root
+[ ] packages/core/ created with types, api, utils, index.ts
+[ ] Existing web app moved to apps/web/ and updated to use @pawsport/core
+[ ] New Expo app created at apps/mobile/
+[ ] Tab navigation working in mobile app
+[ ] AssistantScreen importing queryRegulations from @pawsport/core
+[ ] Push notifications wired to timeline events
+[ ] pnpm install succeeds from root with no errors
+[ ] Both apps run in parallel: pnpm dev:web + pnpm dev:mobile
+
+
