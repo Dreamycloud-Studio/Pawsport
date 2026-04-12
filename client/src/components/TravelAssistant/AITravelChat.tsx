@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { StructuredTravelPlan } from '../../types';
 import StructuredPlanView from './StructuredPlanView';
 import PlanValidationWarning from './PlanValidationWarning';
@@ -336,7 +338,13 @@ const AITravelChat: React.FC = () => {
                 {messages.map((message) => (
                     <div key={message.id} className={`message ${message.role === 'user' ? 'user' : 'ai'}`}>
                         <div className="message-content">
-                            <div className="message-text">{message.content}</div>
+                            <div className="message-text">
+                                {message.role === 'assistant' ? (
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                                ) : (
+                                    message.content
+                                )}
+                            </div>
                             <div className="message-time">
                                 {message.timestamp.toLocaleTimeString([], { 
                                     hour: '2-digit', 
