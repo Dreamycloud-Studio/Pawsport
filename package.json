@@ -13,13 +13,17 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.88",
+    "@anthropic-ai/sdk": "^0.88.0",
     "@supabase/supabase-js": "^2.89.0",
     "@vercel/node": "^2.3.0",
     "ai": "^5.0.115",
-    "axios": "^1.13.2"
+    "axios": "^1.13.2",
+    "openai": "^6.34.0",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "@types/node": "^14.14.0",
+    "@types/pg": "^8.20.0",
     "turbo": "^2.0.0",
     "typescript": "^5.4.0"
   }

@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { StructuredTravelPlan } from '../../types';
 import StructuredPlanView from './StructuredPlanView';
 import PlanValidationWarning from './PlanValidationWarning';
+import { useRegulationQuery } from '../../hooks/useRegulationQuery';
 import './AITravelChat.css';
+
+type ChatMode = 'general' | 'regulation';
 
 interface Message {
     id: string;
@@ -18,6 +23,7 @@ interface QuickAction {
 }
 
 const AITravelChat: React.FC = () => {
+    const [chatMode, setChatMode] = useState<ChatMode>('general');
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
@@ -31,7 +37,10 @@ const AITravelChat: React.FC = () => {
     const [structuredPlan, setStructuredPlan] = useState<StructuredTravelPlan | null>(null);
     const [planWarnings, setPlanWarnings] = useState<string[] | null>(null);
     const [showPlanError, setShowPlanError] = useState(false);
+    const [regCountry, setRegCountry] = useState('');
+    const [regPetType, setRegPetType] = useState<'dog' | 'cat'>('dog');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { ask: askRegulation, result: regResult, loading: regLoading, error: regError } = useRegulationQuery();
 
     const quickActions: QuickAction[] = [
         { label: 'Travel Checklist', prompt: 'Create a travel checklist for my dog from New York to London', icon: '✓' },
@@ -47,6 +56,34 @@ const AITravelChat: React.FC = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    // Sync regulation query results into chat messages
+    useEffect(() => {
+        if (regResult) {
+            const sourcesText = regResult.sources.length > 0
+                ? '\n\n**Sources:**\n' + regResult.sources.map(s => `• [${s.name}](${s.url}) — ${s.topic}`).join('\n')
+                : '';
+            const aiMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: regResult.answer + sourcesText,
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, aiMessage]);
+        }
+    }, [regResult]);
+
+    useEffect(() => {
+        if (regError) {
+            const errorMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: `❌ Regulation query failed: ${regError}`,
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        }
+    }, [regError]);
 
     const generateStructuredPlan = async (userInput: string) => {
         try {
@@ -90,7 +127,7 @@ const AITravelChat: React.FC = () => {
     };
 
     const sendMessage = async (text: string) => {
-        if (!text.trim() || isLoading) return;
+        if (!text.trim() || isLoading || regLoading) return;
 
         const userMessage: Message = {
             id: Date.now().toString(),
@@ -101,6 +138,24 @@ const AITravelChat: React.FC = () => {
 
         setMessages(prev => [...prev, userMessage]);
         setInput('');
+
+        // Regulation Q&A mode — delegate to the hook
+        if (chatMode === 'regulation') {
+            if (!regCountry) {
+                const errorMsg: Message = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: '⚠️ Please select a destination country before asking a regulation question.',
+                    timestamp: new Date()
+                };
+                setMessages(prev => [...prev, errorMsg]);
+                return;
+            }
+            await askRegulation(text.trim(), regCountry, regPetType);
+            return;
+        }
+
+        // General assistant mode — existing behaviour
         setIsLoading(true);
 
         // Check if this is a checklist/plan request
@@ -228,7 +283,48 @@ const AITravelChat: React.FC = () => {
                         <span className="status-indicator">● Online</span>
                     </div>
                 </div>
+                <div className="chat-mode-tabs">
+                    <button
+                        className={`chat-mode-tab ${chatMode === 'general' ? 'active' : ''}`}
+                        onClick={() => setChatMode('general')}
+                    >
+                        General Assistant
+                    </button>
+                    <button
+                        className={`chat-mode-tab ${chatMode === 'regulation' ? 'active' : ''}`}
+                        onClick={() => setChatMode('regulation')}
+                    >
+                        Regulation Q&amp;A
+                    </button>
+                </div>
             </div>
+
+            {chatMode === 'regulation' && (
+                <div className="regulation-controls">
+                    <label className="reg-control">
+                        <span>Country</span>
+                        <input
+                            type="text"
+                            placeholder="e.g. JP, GB, AU"
+                            value={regCountry}
+                            onChange={(e) => setRegCountry(e.target.value.toUpperCase().slice(0, 2))}
+                            maxLength={2}
+                            className="reg-input"
+                        />
+                    </label>
+                    <label className="reg-control">
+                        <span>Pet</span>
+                        <select
+                            value={regPetType}
+                            onChange={(e) => setRegPetType(e.target.value as 'dog' | 'cat')}
+                            className="reg-select"
+                        >
+                            <option value="dog">Dog</option>
+                            <option value="cat">Cat</option>
+                        </select>
+                    </label>
+                </div>
+            )}
 
             {showPlanError && planWarnings && (
                 <PlanValidationWarning 
@@ -242,7 +338,13 @@ const AITravelChat: React.FC = () => {
                 {messages.map((message) => (
                     <div key={message.id} className={`message ${message.role === 'user' ? 'user' : 'ai'}`}>
                         <div className="message-content">
-                            <div className="message-text">{message.content}</div>
+                            <div className="message-text">
+                                {message.role === 'assistant' ? (
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                                ) : (
+                                    message.content
+                                )}
+                            </div>
                             <div className="message-time">
                                 {message.timestamp.toLocaleTimeString([], { 
                                     hour: '2-digit', 
@@ -253,7 +355,7 @@ const AITravelChat: React.FC = () => {
                     </div>
                 ))}
                 
-                {isLoading && (
+                {(isLoading || regLoading) && (
                     <div className="message ai">
                         <div className="message-content">
                             <div className="typing-indicator">
@@ -267,19 +369,21 @@ const AITravelChat: React.FC = () => {
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="quick-actions">
-                {quickActions.map((action, index) => (
-                    <button
-                        key={index}
-                        className="quick-action-btn"
-                        onClick={() => handleQuickAction(action.prompt)}
-                        disabled={isLoading}
-                    >
-                        <span className="action-icon">{action.icon}</span>
-                        {action.label}
-                    </button>
-                ))}
-            </div>
+            {chatMode === 'general' && (
+                <div className="quick-actions">
+                    {quickActions.map((action, index) => (
+                        <button
+                            key={index}
+                            className="quick-action-btn"
+                            onClick={() => handleQuickAction(action.prompt)}
+                            disabled={isLoading || regLoading}
+                        >
+                            <span className="action-icon">{action.icon}</span>
+                            {action.label}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="chat-input-container">
                 <div className="chat-input-wrapper">
@@ -288,14 +392,14 @@ const AITravelChat: React.FC = () => {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        placeholder="Ask me anything about pet travel..."
+                        placeholder={chatMode === 'regulation' ? 'Ask a regulation question...' : 'Ask me anything about pet travel...'}
                         rows={1}
-                        disabled={isLoading}
+                        disabled={isLoading || regLoading}
                     />
                     <button 
                         type="submit"
                         className="send-button"
-                        disabled={!input.trim() || isLoading}
+                        disabled={!input.trim() || isLoading || regLoading}
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                             <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

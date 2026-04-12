@@ -21,3 +21,4 @@ server/dist/
 Thumbs.db
 .vercel
 .env*.local
+supabase/migrations/20260411000001_readonly_role.sql
