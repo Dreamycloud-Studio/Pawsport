@@ -3,15 +3,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-if (!process.env.POSTGRES_READONLY_URL) {
-  throw new Error(
-    "POSTGRES_READONLY_URL is required. Do not use DATABASE_URL — this repo must use a read-only connection."
-  );
-}
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface QueryRequestBody {
@@ -36,6 +27,7 @@ interface QueryResponse {
 // ── Query rewriting ────────────────────────────────────────────────────────
 
 async function rewriteQuery(
+  anthropic: Anthropic,
   question: string,
   destinationCountry: string,
   petType: string
@@ -89,6 +81,7 @@ async function searchRegulations(
 // ── Answer generation ──────────────────────────────────────────────────────
 
 async function generateAnswer(
+  anthropic: Anthropic,
   question: string,
   chunks: RegulationChunk[]
 ): Promise<string> {
@@ -128,6 +121,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!process.env.POSTGRES_READONLY_URL) {
+    return res.status(500).json({ error: "POSTGRES_READONLY_URL is not configured. Do not use DATABASE_URL — this repo must use a read-only connection." });
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: "ANTHROPIC_API_KEY is not configured." });
+  }
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: "OPENAI_API_KEY is not configured." });
+  }
+
   const { question, destinationCountry, petType } =
     req.body as QueryRequestBody;
 
@@ -135,13 +138,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const db = new Client({ connectionString: process.env.POSTGRES_READONLY_URL });
 
   try {
     await db.connect();
 
     // Step 1 — rewrite query for better retrieval
-    const rewrittenQuery = await rewriteQuery(question, destinationCountry, petType);
+    const rewrittenQuery = await rewriteQuery(anthropic, question, destinationCountry, petType);
 
     // Step 2 — embed the rewritten query
     const embeddingResponse = await openai.embeddings.create({
@@ -166,16 +171,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Step 4 — generate cited answer
-    const answer = await generateAnswer(question, chunks);
+    const answer = await generateAnswer(anthropic, question, chunks);
 
     const sources = Array.from(
       new Map(chunks.map((c) => [c.source_url, c])).values()
     ).map((c) => ({ name: c.source_name, url: c.source_url, topic: c.topic }));
 
     return res.status(200).json({ answer, sources } satisfies QueryResponse);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Regulation query error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({
+      error: "Internal server error",
+      message: err?.message || String(err),
+    });
   } finally {
     await db.end();
   }
