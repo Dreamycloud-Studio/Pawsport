@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { InstallPrompt } from './components/InstallPrompt';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/shared/ProtectedRoute';
 import Header from './components/shared/Header';
@@ -27,6 +28,7 @@ const App: React.FC = () => {
           <ProtectedRoute path="/profile" component={Profile} />
         </Switch>
         <Footer />
+        <InstallPrompt />
       </Router>
     </AuthProvider>
   );
