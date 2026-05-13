@@ -3,6 +3,7 @@ import { ExpirationPlugin } from 'workbox-expiration'
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
 import { CacheFirst } from 'workbox-strategies'
+import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -27,12 +28,13 @@ registerRoute(
   new CacheFirst({
     cacheName: 'google-fonts-cache',
     plugins: [
-      new ExpirationPlugin({ maxAgeSeconds: 60 * 60 * 24 * 365 }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 }),
     ],
   })
 )
 
-// NOTE: The /api/regulations endpoint uses POST, which service workers cannot
-// cache via the Fetch API. Offline caching for regulation queries requires
-// switching the endpoint to GET with query params, or using the Cache API
-// manually from the app layer. Tracked as a future optimization.
+// NOTE: The /api/regulations/query endpoint uses POST, which service workers
+// cannot cache via the Fetch API. Offline caching for regulation queries
+// requires switching the endpoint to GET with query params, or using the Cache
+// API manually from the app layer. Tracked as a future optimization.

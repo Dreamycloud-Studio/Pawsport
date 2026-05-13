@@ -39,7 +39,7 @@ export function InstallPrompt() {
       >
         Install
       </button>
-      <button onClick={() => setDismissed(true)} className="text-gray-400 text-sm">✕</button>
+      <button onClick={() => setDismissed(true)} aria-label="Dismiss install prompt" className="text-gray-400 text-sm">✕</button>
     </div>
   )
 }
