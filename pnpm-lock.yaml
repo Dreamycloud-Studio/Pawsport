@@ -90,67 +90,27 @@ importers:
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
-    devDependencies:
-      '@types/react':
-        specifier: ^17.0.2
-        version: 17.0.91
-      '@types/react-dom':
-        specifier: ^17.0.2
-        version: 17.0.26(@types/react@17.0.91)
-      '@types/react-router-dom':
-        specifier: ^5.1.7
-        version: 5.3.3
-      autoprefixer:
-        specifier: ^10.4.22
-        version: 10.4.27(postcss@8.5.8)
-      postcss:
-        specifier: ^8.5.6
-        version: 8.5.8
-      tailwindcss:
-        specifier: ^3.4.18
-        version: 3.4.19
-
-  client:
-    dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.89.0
-        version: 2.99.3
-      ai:
-        specifier: ^5.0.115
-        version: 5.0.157(zod@4.3.6)
-      axios:
-        specifier: ^1.13.2
-        version: 1.13.6
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      lucide-react:
-        specifier: ^0.556.0
-        version: 0.556.0(react@17.0.2)
-      react:
-        specifier: ^17.0.2
-        version: 17.0.2
-      react-dom:
-        specifier: ^17.0.2
-        version: 17.0.2(react@17.0.2)
-      react-markdown:
-        specifier: ^8.0.7
-        version: 8.0.7(@types/react@17.0.91)(react@17.0.2)
-      react-router-dom:
-        specifier: ^5.2.0
-        version: 5.3.4(react@17.0.2)
-      react-scripts:
-        specifier: ^5.0.1
-        version: 5.0.1(@babel/plugin-syntax-flow@7.28.6(@babel/core@7.29.0))(@babel/plugin-transform-react-jsx@7.28.6(@babel/core@7.29.0))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@17.0.2)(ts-node@10.9.1(@types/node@14.18.63)(typescript@4.9.5))(type-fest@0.21.3)(typescript@4.9.5)
-      remark-gfm:
-        specifier: ^3.0.1
-        version: 3.0.1
-      tailwind-merge:
-        specifier: ^3.4.0
-        version: 3.5.0
-      typescript:
-        specifier: ^4.9.5
-        version: 4.9.5
+      workbox-cacheable-response:
+        specifier: ^7.0.0
+        version: 7.4.1
+      workbox-core:
+        specifier: ^7.0.0
+        version: 7.4.1
+      workbox-expiration:
+        specifier: ^7.0.0
+        version: 7.4.1
+      workbox-precaching:
+        specifier: ^7.0.0
+        version: 7.4.1
+      workbox-routing:
+        specifier: ^7.0.0
+        version: 7.4.1
+      workbox-strategies:
+        specifier: ^7.0.0
+        version: 7.4.1
+      workbox-window:
+        specifier: ^7.0.0
+        version: 7.4.1
     devDependencies:
       '@types/react':
         specifier: ^17.0.2
@@ -1673,6 +1633,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vercel/build-utils@6.8.3':
     resolution: {integrity: sha512-C86OPuPAvG/pSr27DPKecmptkYYsgyhOKdHTLv9jI3Pv1yvru78k+JjrAyn7N+0ev75KNV0Prv4P3p76168ePw==}
@@ -6256,11 +6217,20 @@ packages:
     resolution: {integrity: sha512-JfhJUSQDwsF1Xv3EV1vWzSsCOZn4mQ38bWEBR3LdvOxSPgB65gAM6cS2CX8rkkKHRgiLrN7Wxoyu+TuH67kHrw==}
     deprecated: workbox-background-sync@6.6.0
 
+  workbox-cacheable-response@7.4.1:
+    resolution: {integrity: sha512-8xaFoJdDc2OjrlbbL3gEeBO1WKcMwRqwLRupgqahYXu75yXajPLuwrbXMrIGZuWYXrQwk0xDjOxZ/ujCy/oJYw==}
+
   workbox-core@6.6.0:
     resolution: {integrity: sha512-GDtFRF7Yg3DD859PMbPAYPeJyg5gJYXuBQAC+wyrWuuXgpfoOrIQIvFRZnQ7+czTIQjIr1DhLEGFzZanAT/3bQ==}
 
+  workbox-core@7.4.1:
+    resolution: {integrity: sha512-DT+vu46eh/2vRsSHTY4Xmc32Z1rr9PRlQUXr1Dx30ZuXRWwOsvZgGgcwxcasubQLQmbTNYZjv44LkBAQ4tT5tQ==}
+
   workbox-expiration@6.6.0:
     resolution: {integrity: sha512-baplYXcDHbe8vAo7GYvyAmlS4f6998Jff513L4XvlzAOxcl8F620O91guoJ5EOf5qeXG4cGdNZHkkVAPouFCpw==}
+
+  workbox-expiration@7.4.1:
+    resolution: {integrity: sha512-lRKUF7b+OGbeXkQk1s6MHXOa3d7Xxf7Of31W6c6hCfipfIyrtdWZ89stq21AHZMaoG7VNFoHply4Ox+rU31TWg==}
 
   workbox-google-analytics@6.6.0:
     resolution: {integrity: sha512-p4DJa6OldXWd6M9zRl0H6vB9lkrmqYFkRQ2xEiNdBFp9U0LhsGO7hsBscVEyH9H2/3eZZt8c97NB2FD9U2NJ+Q==}
@@ -6272,6 +6242,9 @@ packages:
   workbox-precaching@6.6.0:
     resolution: {integrity: sha512-eYu/7MqtRZN1IDttl/UQcSZFkHP7dnvr/X3Vn6Iw6OsPMruQHiVjjomDFCNtd8k2RdjLs0xiz9nq+t3YVBcWPw==}
 
+  workbox-precaching@7.4.1:
+    resolution: {integrity: sha512-cdr/9qByww7yzEp7zg/qI4ukUrrNjQLgN+ONQRpjy/VqGQXwkgHwr00KksGJK8v0VifwDXBb8a4cWNZH71jn3Q==}
+
   workbox-range-requests@6.6.0:
     resolution: {integrity: sha512-V3aICz5fLGq5DpSYEU8LxeXvsT//mRWzKrfBOIxzIdQnV/Wj7R+LyJVTczi4CQ4NwKhAaBVaSujI1cEjXW+hTw==}
 
@@ -6281,8 +6254,14 @@ packages:
   workbox-routing@6.6.0:
     resolution: {integrity: sha512-x8gdN7VDBiLC03izAZRfU+WKUXJnbqt6PG9Uh0XuPRzJPpZGLKce/FkOX95dWHRpOHWLEq8RXzjW0O+POSkKvw==}
 
+  workbox-routing@7.4.1:
+    resolution: {integrity: sha512-yubJGErZOusuidAenaL5ypfhQOa7urxP/f8E0ws7FPb4039RiWXUWBAyUkmUoOL/BcQGen3h0J8872d51IYxtA==}
+
   workbox-strategies@6.6.0:
     resolution: {integrity: sha512-eC07XGuINAKUWDnZeIPdRdVja4JQtTuc35TZ8SwMb1ztjp7Ddq2CJ4yqLvWzFWGlYI7CG/YGqaETntTxBGdKgQ==}
+
+  workbox-strategies@7.4.1:
+    resolution: {integrity: sha512-GZxpaw9NbmOelj7667uZ2kpk5BFpOGbO4X0qjwh5ls8XQ8C+Lha5LQchTiUzsTFSS+NlUpftYAyOVXvQUrcqOQ==}
 
   workbox-streams@6.6.0:
     resolution: {integrity: sha512-rfMJLVvwuED09CnH1RnIep7L9+mj4ufkTyDPVaXPKlhi9+0czCu+SJggWCIFbPpJaAZmp2iyVGLqS3RUmY3fxg==}
@@ -6298,6 +6277,9 @@ packages:
 
   workbox-window@6.6.0:
     resolution: {integrity: sha512-L4N9+vka17d16geaJXXRjENLFldvkWy7JyGxElRD0JvBxvFEd8LOhr+uXCcar/NzAmIBRv9EZ+M+Qr4mOoBITw==}
+
+  workbox-window@7.4.1:
+    resolution: {integrity: sha512-notZDH2u8VXaqyuD7xaqIfEFi6SRM4SUSd7ewe9PDsVqADuepxX2ZMY3uvuZGxzY5ZOsGC/vD3A/3smFtJt4/A==}
 
   wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
@@ -13833,12 +13815,23 @@ snapshots:
     dependencies:
       workbox-core: 6.6.0
 
+  workbox-cacheable-response@7.4.1:
+    dependencies:
+      workbox-core: 7.4.1
+
   workbox-core@6.6.0: {}
+
+  workbox-core@7.4.1: {}
 
   workbox-expiration@6.6.0:
     dependencies:
       idb: 7.1.1
       workbox-core: 6.6.0
+
+  workbox-expiration@7.4.1:
+    dependencies:
+      idb: 7.1.1
+      workbox-core: 7.4.1
 
   workbox-google-analytics@6.6.0:
     dependencies:
@@ -13857,6 +13850,12 @@ snapshots:
       workbox-routing: 6.6.0
       workbox-strategies: 6.6.0
 
+  workbox-precaching@7.4.1:
+    dependencies:
+      workbox-core: 7.4.1
+      workbox-routing: 7.4.1
+      workbox-strategies: 7.4.1
+
   workbox-range-requests@6.6.0:
     dependencies:
       workbox-core: 6.6.0
@@ -13874,9 +13873,17 @@ snapshots:
     dependencies:
       workbox-core: 6.6.0
 
+  workbox-routing@7.4.1:
+    dependencies:
+      workbox-core: 7.4.1
+
   workbox-strategies@6.6.0:
     dependencies:
       workbox-core: 6.6.0
+
+  workbox-strategies@7.4.1:
+    dependencies:
+      workbox-core: 7.4.1
 
   workbox-streams@6.6.0:
     dependencies:
@@ -13901,6 +13908,11 @@ snapshots:
     dependencies:
       '@types/trusted-types': 2.0.7
       workbox-core: 6.6.0
+
+  workbox-window@7.4.1:
+    dependencies:
+      '@types/trusted-types': 2.0.7
+      workbox-core: 7.4.1
 
   wrap-ansi@7.0.0:
     dependencies:
