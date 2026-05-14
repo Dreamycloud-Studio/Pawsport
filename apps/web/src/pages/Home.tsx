@@ -1,15 +1,26 @@
 import React from 'react';
-import { Hero, Features, CommunityPreview, CallToAction } from '../components/landing';
+import {
+  Hero,
+  Destinations,
+  Features,
+  AISample,
+  Stories,
+  CommunityPreview,
+  CallToAction,
+} from '../components/landing';
 
 const Home: React.FC = () => {
-    return (
-        <>
-            <Hero />
-            <Features />
-            <CommunityPreview />
-            <CallToAction />
-        </>
-    );
+  return (
+    <>
+      <Hero />
+      <Destinations />
+      <Features />
+      <AISample />
+      <Stories />
+      <CommunityPreview />
+      <CallToAction />
+    </>
+  );
 };
 
 export default Home;

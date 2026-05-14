@@ -1,78 +1,46 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { PawPrint, Heart } from 'lucide-react';
+import { PawPrint } from 'lucide-react';
+
+const NAV_LINKS = [
+  { label: 'Destinations',  to: '/' },
+  { label: 'AI Planner',    to: '/travel-planner' },
+  { label: 'Stories',       to: '/community' },
+  { label: 'Pricing',       to: '/#pricing' },
+  { label: 'About',         to: '/' },
+  { label: 'Privacy',       to: '/' },
+  { label: 'Terms',         to: '/' },
+];
 
 const Footer: React.FC = () => {
-    return (
-        <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200">
-            <div className="max-w-7xl mx-auto px-6 py-12 md:px-12">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                    {/* Brand Column */}
-                    <div>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-brand-orange-400 to-brand-pink-400 rounded-2xl flex items-center justify-center shadow-lg transform rotate-12">
-                                <PawPrint className="w-5 h-5 text-white -rotate-12" />
-                            </div>
-                            <span className="text-xl font-bold bg-gradient-to-r from-brand-orange-600 to-brand-pink-600 bg-clip-text text-transparent">
-                                Pawsport
-                            </span>
-                        </div>
-                        <p className="text-gray-600">
-                            Helping pets travel safely and connect with their community worldwide.
-                        </p>
-                    </div>
+  return (
+    <footer className="bg-calm-cream border-t border-calm-sand px-6 py-10 md:px-12 md:py-14">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-sm text-calm-charcoal/60">
+        {/* Logo */}
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-orange-400 to-brand-pink-400 flex items-center justify-center text-white"
+            style={{ transform: 'rotate(12deg)' }}
+          >
+            <PawPrint className="w-4.5 h-4.5" style={{ transform: 'rotate(-12deg)' }} />
+          </div>
+          <span className="text-lg font-bold text-calm-charcoal">Pawsport</span>
+        </div>
 
-                    {/* Quick Links */}
-                    <div>
-                        <h3 className="font-semibold text-gray-900 mb-4">Quick Links</h3>
-                        <ul className="space-y-2">
-                            <li>
-                                <Link to="/" className="text-gray-600 hover:text-brand-orange-600 transition-colors">
-                                    Home
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/travel-planner" className="text-gray-600 hover:text-brand-orange-600 transition-colors">
-                                    Travel Planner
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/community" className="text-gray-600 hover:text-brand-orange-600 transition-colors">
-                                    Community
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/showcase" className="text-gray-600 hover:text-brand-orange-600 transition-colors">
-                                    Component Showcase
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
+        {/* Links */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {NAV_LINKS.map((l) => (
+            <Link key={l.label} to={l.to} className="hover:text-calm-terracotta transition-colors">
+              {l.label}
+            </Link>
+          ))}
+        </div>
 
-                    {/* Contact Info */}
-                    <div>
-                        <h3 className="font-semibold text-gray-900 mb-4">Get in Touch</h3>
-                        <p className="text-gray-600 mb-2">
-                            Have questions? We're here to help!
-                        </p>
-                        <p className="text-gray-600">
-                            📧 contact@pawsport.com
-                        </p>
-                    </div>
-                </div>
-
-                {/* Bottom Bar */}
-                <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-gray-600 text-sm">
-                        &copy; {new Date().getFullYear()} Pawsport. All rights reserved.
-                    </p>
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Made with <Heart className="w-4 h-4 text-brand-pink-400 fill-brand-pink-400" /> for pets everywhere 🐾
-                    </p>
-                </div>
-            </div>
-        </footer>
-    );
+        {/* Copyright */}
+        <span className="text-xs">© 2026 · Made with ❤️ for pets</span>
+      </div>
+    </footer>
+  );
 };
 
 export default Footer;

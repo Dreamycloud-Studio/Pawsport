@@ -1,120 +1,95 @@
 import React from 'react';
-import { Heart, MessageCircle, MapPin } from 'lucide-react';
-import { Card, Badge, Button } from '../ui';
 import { Link } from 'react-router-dom';
-import { mascots } from '../../assets/images';
+import { MapPin, MessageCircle, ArrowRight } from 'lucide-react';
 
-const samplePosts = [
+const COMMUNITY_POSTS = [
   {
-    username: 'sarahpaws',
-    location: 'London → Sydney',
-    pet: 'Max the Golden',
-    caption: 'Max loved his first international flight! ✈️',
-    likes: 234,
-    comments: 18,
+    user:     '@kira.travels',
+    pet:      '🐱 Loki',
+    loc:      'Berlin → Singapore',
+    text:     'Loki cleared customs in 35 min. SG airport pet desk is unreal — pic of his first nap inside.',
+    likes:    42,
+    comments: 8,
   },
   {
-    username: 'catmom_travels',
-    location: 'NYC → Berlin',
-    pet: 'Luna & Leo',
-    caption: 'Both cats settled in perfectly! 🐱',
-    likes: 189,
-    comments: 12,
-  },
-  {
-    username: 'frenchie_adventures',
-    location: 'Toronto → Amsterdam',
-    pet: 'Bella',
-    caption: 'Amsterdam parks are Bella approved! 🌷',
-    likes: 312,
+    user:     '@gus_the_corgi',
+    pet:      '🐶 Gus',
+    loc:      'NYC → Lisbon',
+    text:     'For anyone doing the EU route — book the cargo slot BEFORE the vet appointment. Learned the hard way!',
+    likes:    128,
     comments: 24,
+  },
+  {
+    user:     '@miss_pebbles',
+    pet:      '🐱 Pebbles',
+    loc:      'Auckland → LA',
+    text:     'Two-leg flight with a layover in Tahiti. Pebbles slept through both. Bringing the Pawsport carrier checklist saved my brain.',
+    likes:    73,
+    comments: 11,
   },
 ];
 
 const CommunityPreview: React.FC = () => {
   return (
-    <section className="py-20 md:py-32 bg-gradient-to-br from-brand-pink-50 via-brand-purple-50 to-brand-blue-50 relative overflow-hidden">
-      {/* Floating Mascot Decorations */}
-      <div className="hidden lg:block absolute top-10 left-10 w-40 opacity-20 animate-bounce">
-        <img
-          src={mascots.pair}
-          alt="Pet friends"
-          className="w-full h-auto"
-        />
-      </div>
-      <div className="hidden lg:block absolute bottom-20 right-10 w-48 opacity-30">
-        <img
-          src={mascots.traveling}
-          alt="Traveling pets"
-          className="w-full h-auto"
-        />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <Badge variant="pink" className="mb-4">
-            🐾 Join the Community 🐾
-          </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Share Your{' '}
-            <span className="bg-gradient-to-r from-brand-orange-500 to-brand-pink-500 bg-clip-text text-transparent">
-              Pet's Adventures
-            </span>
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Connect with fellow pet travelers, share tips, and get inspired by their journeys!
-          </p>
-        </div>
-
-        {/* Community Posts Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {samplePosts.map((post, index) => (
-            <Card key={index} className="overflow-hidden">
-              {/* Post Image Placeholder */}
-              <div className="h-48 bg-gradient-to-br from-brand-orange-100 to-brand-pink-100 flex items-center justify-center mb-4 -mx-6 -mt-6">
-                <img
-                  src={mascots.suitcase}
-                  alt={post.pet}
-                  className="h-32 object-contain"
-                />
-              </div>
-
-              {/* Post Content */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-brand-orange-600">@{post.username}</span>
-                  <Badge variant="gray" className="text-xs px-2 py-1">
-                    <MapPin className="w-3 h-3" />
-                    {post.location.split(' → ')[0]}
-                  </Badge>
-                </div>
-                
-                <p className="text-gray-600">{post.caption}</p>
-                
-                <div className="flex items-center gap-4 text-sm text-gray-500 pt-2 border-t">
-                  <div className="flex items-center gap-1">
-                    <Heart className="w-4 h-4" />
-                    {post.likes}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="w-4 h-4" />
-                    {post.comments}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* CTA Button */}
-        <div className="text-center">
-          <Link to="/community">
-            <Button size="lg">
-              Explore Full Community
-              <MessageCircle className="w-5 h-5 ml-2" />
-            </Button>
+    <section className="bg-calm-cream px-6 py-16 md:px-12 md:py-28">
+      <div className="max-w-7xl mx-auto">
+        {/* Header row */}
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
+          <div className="max-w-xl">
+            <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-calm-clay font-bold mb-4">
+              <span className="w-8 h-px bg-calm-clay" />
+              Nose Booper
+            </div>
+            <h2
+              className="font-bold text-calm-charcoal text-4xl md:text-6xl"
+              style={{ letterSpacing: '-0.025em' }}
+            >
+              From the{' '}
+              <span style={{ color: '#b85e3e' }} className="italic">
+                community
+              </span>
+              .
+            </h2>
+          </div>
+          <Link
+            to="/community"
+            className="text-sm font-semibold text-calm-terracotta flex items-center gap-1 hover:text-calm-clay transition-colors"
+          >
+            Browse all routes <ArrowRight className="w-3.5 h-3.5" />
           </Link>
+        </div>
+
+        {/* Posts grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {COMMUNITY_POSTS.map((p, i) => (
+            <div key={i} className="bg-white rounded-3xl p-6 border border-calm-sand">
+              {/* User row */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-calm-sand text-calm-charcoal flex items-center justify-center text-lg">
+                  {p.pet[0]}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm text-calm-charcoal">{p.user}</div>
+                  <div className="text-xs text-calm-charcoal/60 flex items-center gap-1">
+                    <MapPin className="w-2.5 h-2.5" />
+                    {p.loc}
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-calm-charcoal/85 mb-4">{p.text}</p>
+
+              <div className="flex items-center gap-3 text-xs text-calm-charcoal/60 pt-3 border-t border-calm-sand">
+                <span className="inline-flex items-center gap-1">🐾 {p.likes}</span>
+                <span className="inline-flex items-center gap-1">
+                  <MessageCircle className="w-3 h-3" /> {p.comments}
+                </span>
+                <span className="ml-auto text-[10px] uppercase tracking-wider text-calm-terracotta font-bold">
+                  {p.pet}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
