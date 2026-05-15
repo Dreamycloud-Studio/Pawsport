@@ -115,6 +115,57 @@ export class LLMService {
         };
     }
 
+    public async chat(messages: { role: string; content: string }[]): Promise<string> {
+        if (!OPENAI_API_KEY) {
+            throw new Error('OPENAI_API_KEY is not set');
+        }
+        const response = await axios.post(
+            'https://api.openai.com/v1/chat/completions',
+            {
+                model: 'gpt-4',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are Pawsport AI, a friendly and expert pet travel assistant. Help pet owners plan international travel with their pets — covering regulations, vaccinations, documentation, timelines, and logistics. Be concise and practical.'
+                    },
+                    ...messages
+                ],
+                temperature: 0.7,
+                max_tokens: 800
+            },
+            { headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' } }
+        );
+        return response.data.choices[0].message.content;
+    }
+
+    public async queryRegulations(question: string, destinationCountry: string, petType: string): Promise<{ answer: string; sources: { name: string; url: string; topic: string }[] }> {
+        if (!OPENAI_API_KEY) {
+            throw new Error('OPENAI_API_KEY is not set');
+        }
+        const response = await axios.post(
+            'https://api.openai.com/v1/chat/completions',
+            {
+                model: 'gpt-4',
+                messages: [
+                    {
+                        role: 'system',
+                        content: `You are a pet travel regulation expert. Answer questions about importing ${petType}s into ${destinationCountry}. Be accurate, cite official sources where possible, and flag anything time-sensitive. Respond as JSON: { "answer": "...", "sources": [{ "name": "...", "url": "...", "topic": "..." }] }`
+                    },
+                    { role: 'user', content: question }
+                ],
+                temperature: 0.3,
+                max_tokens: 1000
+            },
+            { headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' } }
+        );
+        const content = response.data.choices[0].message.content;
+        try {
+            return JSON.parse(content);
+        } catch {
+            return { answer: content, sources: [] };
+        }
+    }
+
     public async getRegulationSummary(params: any): Promise<any> {
         try {
             // Mock implementation - replace with actual OpenAI call if needed

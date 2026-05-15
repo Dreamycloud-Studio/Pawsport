@@ -3,8 +3,12 @@ import authRoutes from './authRoutes';
 import travelRoutes from './travelRoutes';
 import communityRoutes from './communityRoutes';
 import notificationRoutes from './notificationRoutes';
+import { handleChat } from '../controllers/chatController';
 
 const router = express.Router();
+
+// General AI chat
+router.post('/chat', handleChat);
 
 // Auth routes
 router.use('/auth', authRoutes);

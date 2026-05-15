@@ -9,6 +9,9 @@ router.post('/checklist', travelController.getTravelChecklist.bind(travelControl
 // Route to get regulation summary
 router.get('/regulations/:country', travelController.getRegulationSummary.bind(travelController));
 
+// Route for LLM-powered regulation Q&A
+router.post('/regulations/query', travelController.queryRegulations.bind(travelController));
+
 // Route to get document explanation
 router.post('/documents', travelController.explainDocuments.bind(travelController));
 

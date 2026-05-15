@@ -21,7 +21,7 @@ export function useRegulationQuery(): UseRegulationQueryReturn {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/regulations/query", {
+      const res = await fetch("/api/travel/regulations/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

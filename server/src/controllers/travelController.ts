@@ -67,6 +67,20 @@ class TravelController {
         }
     }
 
+    public async queryRegulations(req: Request, res: Response): Promise<void> {
+        try {
+            const { question, destinationCountry, petType } = req.body;
+            if (!question || !destinationCountry || !petType) {
+                res.status(400).json({ message: 'question, destinationCountry, and petType are required' });
+                return;
+            }
+            const result = await this.llmService.queryRegulations(question, destinationCountry, petType);
+            res.status(200).json(result);
+        } catch (error: any) {
+            res.status(500).json({ message: 'Error querying regulations', error: error.message });
+        }
+    }
+
     public async explainDocuments(req: Request, res: Response): Promise<void> {
         try {
             const { documents } = req.body;
