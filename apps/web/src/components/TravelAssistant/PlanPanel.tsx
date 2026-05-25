@@ -34,17 +34,6 @@ const CATEGORY_TO_GROUP: Record<string, string> = {
   preparation: 'PREP',
 };
 
-const DEMO_ITEMS: PlanItem[] = [
-  { id: 1, group: 'VET', color: GROUP_COLORS.VET, task: 'ISO 11784 microchip', sub: 'On file · Dr. Larsen', done: true, date: 'Done' },
-  { id: 2, group: 'VET', color: GROUP_COLORS.VET, task: 'Rabies booster', sub: '21+ days before flight', done: true, date: 'Jun 02' },
-  { id: 3, group: 'VET', color: GROUP_COLORS.VET, task: 'Tapeworm treatment', sub: '24–120h before arrival', done: false, date: 'Jul 19', important: true },
-  { id: 4, group: 'DOCS', color: GROUP_COLORS.DOCS, task: 'EU pet passport', sub: 'Apply 4 weeks out', done: false, date: 'Jun 15' },
-  { id: 5, group: 'DOCS', color: GROUP_COLORS.DOCS, task: 'Annex IV form', sub: 'Not required — personal', done: true, date: 'Skip' },
-  { id: 6, group: 'FLIGHT', color: GROUP_COLORS.FLIGHT, task: 'Book Air France slot', sub: 'Pet space limited', done: false, date: 'Jul 01', important: true },
-  { id: 7, group: 'PREP', color: GROUP_COLORS.PREP, task: 'Carrier training', sub: '2 weeks of acclimation', done: false, date: 'Jul 08' },
-  { id: 8, group: 'PREP', color: GROUP_COLORS.PREP, task: 'Comfort pack', sub: 'Blanket, treats, water', done: false, date: 'Jul 21' },
-];
-
 function planToItems(plan: StructuredTravelPlan): PlanItem[] {
   return plan.checklist.map((t, i) => ({
     id: t.id || i,
@@ -64,23 +53,25 @@ interface PlanPanelProps {
   plan?: StructuredTravelPlan | null;
   tripLabel?: string;
   petEmoji?: string;
+  onToggleTask?: (taskId: string) => void;
 }
 
 const PlanPanel: React.FC<PlanPanelProps> = ({
   plan,
   tripLabel = 'Bella → Paris 🇫🇷',
   petEmoji = '🐶',
+  onToggleTask,
 }) => {
-  const [demoItems, setDemoItems] = useState<PlanItem[]>(DEMO_ITEMS);
   const [saved, setSaved] = useState(true);
 
   const toggle = (id: number | string) => {
+    if (!plan) return;
     setSaved(false);
-    setDemoItems((xs) => xs.map((x) => (x.id === id ? { ...x, done: !x.done } : x)));
+    onToggleTask?.(String(id));
     setTimeout(() => setSaved(true), 800);
   };
 
-  const displayItems = plan ? planToItems(plan) : demoItems;
+  const displayItems = plan ? planToItems(plan) : [];
   const total = displayItems.length;
   const done = displayItems.filter((i) => i.done).length;
 
@@ -116,6 +107,11 @@ const PlanPanel: React.FC<PlanPanelProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
+        {!displayItems.length && (
+          <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+            Generate a checklist in chat to populate this trip plan.
+          </div>
+        )}
         {GROUPS.map((g) => {
           const list = displayItems.filter((i) => i.group === g);
           if (!list.length) return null;
@@ -138,7 +134,7 @@ const PlanPanel: React.FC<PlanPanelProps> = ({
                     }`}
                   >
                     <button
-                      onClick={() => !plan && toggle(it.id)}
+                      onClick={() => toggle(it.id)}
                       className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition ${
                         it.done
                           ? 'bg-gradient-to-r from-orange-400 to-pink-400 border-transparent text-white'
@@ -180,7 +176,7 @@ const PlanPanel: React.FC<PlanPanelProps> = ({
           <span
             className={`w-1.5 h-1.5 rounded-full ${saved ? 'bg-green-500' : 'bg-yellow-400'}`}
           />
-          {saved ? 'Saved · just now' : 'Saving…'}
+          {saved ? 'Saved locally' : 'Saving…'}
         </span>
         <button className="w-9 h-9 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-600">
           <Share2 size={14} />

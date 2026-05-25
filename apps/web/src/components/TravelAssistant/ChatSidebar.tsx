@@ -1,30 +1,117 @@
 import React from 'react';
-import { PawPrint, Plus } from 'lucide-react';
+import { PawPrint, Pencil, Plus, Trash2 } from 'lucide-react';
 
-const PETS = [
-  { id: 'bella', name: 'Bella', kind: '🐶 Beagle · 9kg' },
-  { id: 'mochi', name: 'Mochi', kind: '🐱 Calico · 4kg' },
-];
+type TripStatus = 'draft' | 'in_progress' | 'completed';
 
-const TRIPS = [
-  { id: 't1', pet: 'Bella', route: 'NYC → Paris', when: 'In 5 wks', progress: 34, badge: 'In progress' },
-  { id: 't2', pet: 'Bella', route: 'NYC → London', when: 'Drafted', progress: 0, badge: 'Draft' },
-  { id: 't3', pet: 'Mochi', route: 'NYC → Tokyo', when: 'Saved', progress: 12, badge: 'Drafted' },
-];
+type TripUpdate = {
+  petName?: string;
+  petEmoji?: string;
+  species?: string;
+  breed?: string;
+  origin?: string;
+  destination?: string;
+  travelDate?: string;
+  vaccinationStatus?: string;
+  status?: TripStatus;
+};
+
+interface SidebarTrip {
+  id: string;
+  petName: string;
+  petEmoji: string;
+  species: string;
+  breed: string;
+  route: string;
+  when: string;
+  progress: number;
+  badge: string;
+  origin: string;
+  destination: string;
+  travelDate: string;
+  status: TripStatus;
+}
 
 interface ChatSidebarProps {
+  trips: SidebarTrip[];
   activeId?: string;
   onSelect?: (id: string) => void;
+  onCreateTrip?: () => void;
+  onUpdateTrip?: (id: string, updates: TripUpdate) => void;
+  onDeleteTrip?: (id: string) => void;
   userName?: string;
   userSub?: string;
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
-  activeId = 't1',
+  trips,
+  activeId = '',
   onSelect,
+  onCreateTrip,
+  onUpdateTrip,
+  onDeleteTrip,
   userName = 'Sara K.',
   userSub = 'Free plan · 2 trips',
 }) => {
+  const pets = React.useMemo(() => {
+    const grouped = new Map<string, { id: string; name: string; kind: string; emoji: string }>();
+    trips.forEach((trip) => {
+      if (grouped.has(trip.petName)) return;
+      grouped.set(trip.petName, {
+        id: trip.petName.toLowerCase().replace(/\s+/g, '-'),
+        name: trip.petName,
+        kind: `${trip.petEmoji} ${trip.breed}`,
+        emoji: trip.petEmoji,
+      });
+    });
+    return Array.from(grouped.values());
+  }, [trips]);
+
+  const editTrip = (trip: SidebarTrip) => {
+    const origin = window.prompt('Origin city/country', trip.origin);
+    if (origin === null) return;
+    const destination = window.prompt('Destination city/country', trip.destination);
+    if (destination === null) return;
+    const petName = window.prompt('Pet name', trip.petName);
+    if (petName === null) return;
+    const breed = window.prompt('Pet breed', trip.breed);
+    if (breed === null) return;
+    const travelDateInput = window.prompt(
+      'Travel date (YYYY-MM-DD)',
+      trip.travelDate.slice(0, 10)
+    );
+    if (travelDateInput === null) return;
+    const statusInput = window.prompt(
+      'Status (draft, in_progress, completed)',
+      trip.status
+    );
+    if (statusInput === null) return;
+
+    const parsedTravelDate = new Date(travelDateInput);
+    const normalizedTravelDate = Number.isNaN(parsedTravelDate.getTime())
+      ? trip.travelDate
+      : parsedTravelDate.toISOString();
+
+    const normalizedStatus =
+      statusInput === 'draft' || statusInput === 'in_progress' || statusInput === 'completed'
+        ? statusInput
+        : trip.status;
+
+    onUpdateTrip?.(trip.id, {
+      origin: origin.trim() || trip.origin,
+      destination: destination.trim() || trip.destination,
+      petName: petName.trim() || trip.petName,
+      breed: breed.trim() || trip.breed,
+      travelDate: normalizedTravelDate,
+      status: normalizedStatus,
+    });
+  };
+
+  const removeTrip = (trip: SidebarTrip) => {
+    const confirmed = window.confirm(`Delete ${trip.route} for ${trip.petName}?`);
+    if (!confirmed) return;
+    onDeleteTrip?.(trip.id);
+  };
+
   const initials = userName
     .split(' ')
     .map((w) => w[0])
@@ -46,19 +133,22 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </span>
       </div>
 
-      <button className="m-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-orange-400 to-pink-400 text-white text-sm font-semibold">
+      <button
+        onClick={onCreateTrip}
+        className="m-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-orange-400 to-pink-400 text-white text-sm font-semibold"
+      >
         <Plus size={14} /> New trip
       </button>
 
       <div className="px-4 pb-2 text-[10px] uppercase tracking-wider text-gray-400 font-bold">Pets</div>
       <div className="px-3 space-y-1">
-        {PETS.map((p) => (
+        {pets.map((p) => (
           <button
             key={p.id}
             className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-gray-50 text-left"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-100 to-pink-100 flex items-center justify-center text-base">
-              {p.kind.slice(0, 2)}
+              {p.emoji}
             </div>
             <div className="min-w-0">
               <div className="text-sm font-semibold text-gray-800">{p.name}</div>
@@ -71,30 +161,50 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       <div className="px-4 pt-4 pb-2 text-[10px] uppercase tracking-wider text-gray-400 font-bold flex items-center justify-between">
         Saved trips{' '}
         <span className="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded-md text-[9px]">
-          {TRIPS.length}
+          {trips.length}
         </span>
       </div>
       <div className="px-3 space-y-1 flex-1 overflow-auto">
-        {TRIPS.map((t) => {
+        {trips.map((t) => {
           const active = t.id === activeId;
           return (
-            <button
+            <div
               key={t.id}
-              onClick={() => onSelect?.(t.id)}
               className={`w-full text-left px-3 py-2.5 rounded-xl border transition ${
                 active
                   ? 'bg-orange-50 border-orange-200'
                   : 'bg-white border-transparent hover:bg-gray-50'
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-semibold text-gray-900">{t.route}</span>
-                <span className="text-[9px] uppercase tracking-wider font-bold text-gray-400">
+              <div className="flex items-center gap-2 mb-1">
+                <button
+                  onClick={() => onSelect?.(t.id)}
+                  className="flex-1 text-left min-w-0"
+                >
+                  <span className="text-sm font-semibold text-gray-900 block truncate">{t.route}</span>
+                </button>
+                <span className="text-[9px] uppercase tracking-wider font-bold text-gray-400 whitespace-nowrap">
                   {t.badge}
                 </span>
               </div>
-              <div className="text-[11px] text-gray-500 mb-1.5">
-                {t.pet} · {t.when}
+              <div className="text-[11px] text-gray-500 mb-1.5 flex items-center gap-2">
+                <button onClick={() => onSelect?.(t.id)} className="text-left flex-1 truncate">
+                  {t.petName} · {t.when}
+                </button>
+                <button
+                  onClick={() => editTrip(t)}
+                  className="w-6 h-6 rounded-full hover:bg-gray-100 text-gray-500 flex items-center justify-center"
+                  aria-label="Edit trip"
+                >
+                  <Pencil size={12} />
+                </button>
+                <button
+                  onClick={() => removeTrip(t)}
+                  className="w-6 h-6 rounded-full hover:bg-red-50 text-gray-500 hover:text-red-600 flex items-center justify-center"
+                  aria-label="Delete trip"
+                >
+                  <Trash2 size={12} />
+                </button>
               </div>
               <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
                 <div
@@ -102,7 +212,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   style={{ width: `${t.progress}%` }}
                 />
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

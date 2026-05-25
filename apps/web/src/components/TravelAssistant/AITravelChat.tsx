@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Sparkles, Send, User } from 'lucide-react';
-import { StructuredTravelPlan } from '../../types';
+import { PlannerTrip, StructuredTravelPlan } from '../../types';
 import PlanValidationWarning from './PlanValidationWarning';
 import { useRegulationQuery } from '../../hooks/useRegulationQuery';
 
@@ -17,6 +17,8 @@ interface Message {
 
 interface AITravelChatProps {
   onPlanGenerated?: (plan: StructuredTravelPlan | null) => void;
+  activeTrip?: PlannerTrip | null;
+  contextRevision?: number;
 }
 
 const SUGGESTIONS = [
@@ -26,7 +28,11 @@ const SUGGESTIONS = [
   'Print plan as PDF',
 ];
 
-const AITravelChat: React.FC<AITravelChatProps> = ({ onPlanGenerated }) => {
+const AITravelChat: React.FC<AITravelChatProps> = ({
+  onPlanGenerated,
+  activeTrip,
+  contextRevision = 0,
+}) => {
   const [chatMode, setChatMode] = useState<ChatMode>('general');
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -44,8 +50,29 @@ const AITravelChat: React.FC<AITravelChatProps> = ({ onPlanGenerated }) => {
   const [regCountry, setRegCountry] = useState('');
   const [regPetType, setRegPetType] = useState<'dog' | 'cat'>('dog');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const systemContextRef = useRef('');
   const { ask: askRegulation, result: regResult, loading: regLoading, error: regError } =
     useRegulationQuery();
+
+  useEffect(() => {
+    if (!activeTrip) {
+      systemContextRef.current = '';
+      return;
+    }
+
+    systemContextRef.current = [
+      'Active trip context for future planning responses:',
+      `petName: ${activeTrip.petName}`,
+      `species: ${activeTrip.species}`,
+      `breed: ${activeTrip.breed}`,
+      `origin: ${activeTrip.origin}`,
+      `destination: ${activeTrip.destination}`,
+      `travelDate: ${activeTrip.travelDate}`,
+      `vaccinationStatus: ${activeTrip.vaccinationStatus}`,
+      `status: ${activeTrip.status}`,
+      'Use this trip as default context unless user explicitly overrides details.',
+    ].join('\n');
+  }, [activeTrip, contextRevision]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -86,17 +113,21 @@ const AITravelChat: React.FC<AITravelChatProps> = ({ onPlanGenerated }) => {
 
   const generateStructuredPlan = async (_userInput: string) => {
     try {
+      const payload = {
+        origin: activeTrip?.origin || 'New York',
+        destination: activeTrip?.destination || 'London',
+        species: activeTrip?.species || 'dog',
+        breed: activeTrip?.breed || 'Labrador',
+        vaccinationStatus: activeTrip?.vaccinationStatus || 'up-to-date',
+        travelDate:
+          activeTrip?.travelDate ||
+          new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+
       const response = await fetch('/api/travel/checklist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          origin: 'New York',
-          destination: 'London',
-          species: 'dog',
-          breed: 'Labrador',
-          vaccinationStatus: 'up-to-date',
-          travelDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-        }),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('Failed');
       const data = await response.json();
@@ -173,7 +204,10 @@ const AITravelChat: React.FC<AITravelChatProps> = ({ onPlanGenerated }) => {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages }),
+        body: JSON.stringify({
+          messages: apiMessages,
+          tripContext: systemContextRef.current || undefined,
+        }),
       });
       if (!response.ok) throw new Error('Failed');
       const data = await response.json();
@@ -209,13 +243,21 @@ const AITravelChat: React.FC<AITravelChatProps> = ({ onPlanGenerated }) => {
           <Sparkles size={18} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-gray-900">Planning Bella's trip to Paris</div>
+          <div className="font-bold text-gray-900">
+            {activeTrip
+              ? `Planning ${activeTrip.petName}'s trip to ${activeTrip.destination}`
+              : 'Plan your next pet trip'}
+          </div>
           <div className="text-xs text-gray-500 flex items-center gap-2">
             <span className="inline-flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> AI online
             </span>
             <span>·</span>
-            <span>EU route · 6-week runway</span>
+            <span>
+              {activeTrip
+                ? `${activeTrip.origin} → ${activeTrip.destination} · ${activeTrip.species}`
+                : 'Choose a trip on the left'}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-1 bg-white rounded-full border border-gray-200 p-1 text-xs">
@@ -241,7 +283,7 @@ const AITravelChat: React.FC<AITravelChatProps> = ({ onPlanGenerated }) => {
           </button>
         </div>
         <span className="text-xs px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-700 font-semibold">
-          🇫🇷 Paris
+          {activeTrip?.destination || 'No trip selected'}
         </span>
       </div>
 

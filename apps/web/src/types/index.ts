@@ -121,3 +121,26 @@ export interface PlanValidationResult {
     warnings: string[];
     plan?: StructuredTravelPlan;
 }
+
+export type TripStatus = 'draft' | 'in_progress' | 'completed';
+
+export interface PlannerTrip {
+    id: string;
+    petName: string;
+    petEmoji: string;
+    species: string;
+    breed: string;
+    origin: string;
+    destination: string;
+    travelDate: string;
+    vaccinationStatus: string;
+    status: TripStatus;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface PlannerStoredData {
+    version: number;
+    trips: PlannerTrip[];
+    plansByTripId: Record<string, StructuredTravelPlan | null>;
+}
