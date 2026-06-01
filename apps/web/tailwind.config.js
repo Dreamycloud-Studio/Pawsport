@@ -41,10 +41,24 @@ module.exports = {
             50: '#eff6ff',
           },
         },
+        calm: {
+          cream:      '#faf6ee',
+          sand:       '#e5d9c3',
+          charcoal:   '#2c2520',
+          terracotta: '#b85e3e',
+          clay:       '#9c4a2e',
+          butter:     '#f0d98a',
+          sage:       '#5b6f4c',
+          moss:       '#3e5234',
+        },
       },
       backgroundImage: {
         'gradient-primary': 'linear-gradient(to right, #fb923c, #f472b6)',
         'gradient-hero': 'linear-gradient(to bottom right, #fdf2f8, #fed7aa, #fefce8)',
+      },
+      boxShadow: {
+        'lift': '0 8px 30px -4px rgba(0,0,0,0.12), 0 4px 12px -2px rgba(0,0,0,0.08)',
+        'warm': '0 12px 30px -8px rgba(251,146,60,0.35)',
       },
       borderRadius: {
         '2xl': '1rem',

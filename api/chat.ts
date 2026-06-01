@@ -6,7 +6,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const { messages } = req.body;
+        const { messages, tripContext } = req.body;
 
         if (!messages || !Array.isArray(messages)) {
             return res.status(400).json({ error: 'Messages array is required' });
@@ -39,7 +39,7 @@ When discussing regulations or requirements, always remind users to verify with 
             body: JSON.stringify({
                 model: 'gpt-3.5-turbo',
                 messages: [
-                    { role: 'system', content: systemPrompt },
+                    { role: 'system', content: tripContext ? `${systemPrompt}\n\n${tripContext}` : systemPrompt },
                     ...messages,
                 ],
                 temperature: 0.7,

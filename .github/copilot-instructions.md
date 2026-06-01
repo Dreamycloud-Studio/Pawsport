@@ -2,99 +2,87 @@
 
 ## Project Overview
 Pawsport is an AI-powered pet travel assistant with two core features:
-1. **Travel Assistant**: Generates personalized checklists, regulation summaries, and document explanations for pet relocation
+1. **Travel Assistant**: AI chat + structured travel plan generation (checklist, timeline, regulation lookup)
 2. **Nose Booper**: Community layer connecting pet owners on similar travel routes
 
 ## Architecture
 
-### Client-Server Structure
-- **Client** (`client/`): React 17 + TypeScript SPA using React Router v5
-- **Server** (`server/`): Express + TypeScript REST API with middleware-based error handling
-- **Communication**: Axios-based API calls to `http://localhost:5000/api`
+### Monorepo Structure
+- `apps/web/` — React 17 + TypeScript SPA (Create React App)
+- `packages/core/` — Shared types, Supabase client singleton, RAG utility, timeline utils
+- `api/` — Vercel serverless functions (the backend)
+- `lib/` — Shared server-side services (LLMService, community/matching logic)
+
+Build and deployment are managed by **pnpm workspaces + Turbo**. Vercel builds from `apps/web/` and routes `/api/*` to the serverless functions in `api/`.
 
 ### Key Data Flows
-1. **Travel Planning Flow**: User input → `TravelPlanner` page → `api.ts` → `/api/travel/*` routes → Controller → Service (LLM/Regulation) → Response
-2. **Community Flow**: `Community` page → `/api/community/*` routes → Controller → Seeded mock data → Response
-3. **LLM Integration**: Controllers call `llmService.ts` which proxies to external LLM API (configured via `LLM_API_URL`)
+
+1. **Travel Planning**: `TravelPlanner` page → `AITravelChat` → `POST /api/travel/checklist` → GPT-4 → `StructuredTravelPlan` → `PlanPanel`
+2. **Regulation Query**: `useRegulationQuery()` hook → `POST /api/regulations/query` → Claude Haiku (query rewrite) → OpenAI embeddings → pgvector search → Claude Sonnet (answer generation)
+3. **General Chat**: `AITravelChat` → `POST /api/chat` → GPT-3.5-turbo → streamed response
+4. **Community**: `Community` page → `POST/GET /api/community/posts` → Supabase
+
+### Trip State
+Trip data is persisted client-side in `localStorage` via `apps/web/src/lib/tripStorage.ts` (key: `pawsport.travelPlanner.v1`). There is no server-side persistence for trip planner state.
+
+### Auth
+Supabase auth via `AuthContext` (`apps/web/src/contexts/AuthContext.tsx`). Always use the `useAuth()` hook to access user/session. Never read Supabase directly from components.
 
 ## Development Workflows
 
-### Running the Application
 ```bash
-# Terminal 1 - Start server (port 5000)
-cd server
-npm install
-npm run dev
+# From repo root
+pnpm install
+turbo run dev --filter=web      # Frontend dev server on :3000
 
-# Terminal 2 - Start client (port 3000)
-cd client
-npm install
+# Frontend only (apps/web/)
 npm start
+npm run build
+npm test
+npm test -- --testPathPattern=<file>   # Single test file
 ```
 
-### Building for Production
-```bash
-cd client && npm run build  # Creates optimized React build
-cd server && npm run build  # Compiles TypeScript to JavaScript
-```
+The frontend proxies `/api` → `http://localhost:5000` in development (configured in `apps/web/package.json`). For full-stack local dev, Vercel CLI (`vercel dev`) runs both together.
 
 ## Code Conventions
 
 ### Component Organization
-- **Page components** (`pages/`): Route-level containers (e.g., `TravelPlanner.tsx`, `Community.tsx`)
-- **Feature components**: Organized by domain (`TravelAssistant/`, `NoseBooper/`)
-- **Shared components** (`shared/`): Layout elements (`Header`, `Footer`)
+- **Pages** (`pages/`): Route-level containers
+- **Feature components**: Domain-organized under `TravelAssistant/`, `NoseBooper/`, `landing/`
+- **Shared** (`shared/`): `Header`, `Footer`, `ProtectedRoute`, `NotificationBell`
+- **UI primitives** (`ui/`): `Button`, `Card`, `Input`, `Badge`, `Select`
 
-### API Service Pattern
-All API calls go through `client/src/services/api.ts` - never make direct axios calls from components. Example:
-```typescript
-// ✅ Correct
-import { getTravelChecklist } from '../services/api';
-const data = await getTravelChecklist(params);
+### Styling
+Tailwind CSS with a custom "calm" color palette (cream, sand, charcoal, terracotta, clay, sage, moss) — not standard Tailwind colors. Use `cn()` from `apps/web/src/lib/utils.ts` for conditional class merging.
 
-// ❌ Avoid
-axios.post('http://localhost:5000/api/travel/checklist', params);
-```
+### React Version
+**React 17 + Router v5** — use `<Route component={...}>` syntax, not the v6 `element` prop. No path aliases in imports.
 
-### Server Controller Pattern
-Controllers are instantiated as singletons and exported as default:
-```typescript
-class TravelController {
-    // Methods here
-}
-export default new TravelController();
-```
+### API Serverless Functions
+All backend logic lives in `api/`. Each file exports a default `handler(req, res)` function. Shared services are in `lib/services/`.
 
 ### Type Definitions
-- Client types: `client/src/types/index.ts`
-- Server types: `server/src/types/index.ts`
-- Share similar structures but may differ (e.g., `Pet` vs `PetProfile`)
-
-### Error Handling
-- Server uses centralized `errorHandler` middleware in `app.ts`
-- Controllers catch errors and pass to `res.status(500).json()`
-- Client API functions throw errors with descriptive messages
+- Frontend types: `apps/web/src/types/index.ts`
+- Shared types (used by both frontend and api): `packages/core/src/types/index.ts`
 
 ## Critical Integration Points
 
-### LLM Service Configuration
-`server/src/services/llmService.ts` requires `LLM_API_URL` environment variable. Currently points to placeholder `https://api.example.com/llm` - update for production use.
+### LLM Services
+- `OPENAI_API_KEY` — used by `api/chat.ts`, `api/travel/checklist.ts`, and the embedding step in `api/regulations/query.ts`
+- `ANTHROPIC_API_KEY` — used by `api/regulations/query.ts` for query rewriting (Claude Haiku) and answer generation (Claude Sonnet)
 
-### Matching Service
-`matchingService.ts` uses in-memory mock data (`userProfiles` array). Replace with database queries for production.
+### RAG Database
+`api/regulations/query.ts` uses a **read-only** PostgreSQL connection (`POSTGRES_READONLY_URL`) with pgvector. The `regulation_chunks` table holds pre-embedded regulation documents filtered by `country` and `pet_types`.
+
+### Supabase
+Frontend: `REACT_APP_SUPABASE_URL` + `REACT_APP_SUPABASE_ANON_KEY`  
+API/server: `SUPABASE_URL` + `SUPABASE_ANON_KEY` + `SUPABASE_SERVICE_ROLE_KEY`
 
 ### Route Structure
-All API routes mount under `/api` prefix:
-- `/api/travel/*` → Travel features (checklist, regulations, documents)
-- `/api/community/*` → Community features (posts, profiles, matching)
-
-## Dependencies & Environment
-- **React Scripts 4.0.3**: Uses Create React App (no custom webpack config)
-- **TypeScript 4.1.2**: Shared across client and server
-- **Express Validator**: Used in `validation.ts` middleware
-- **No Database**: Currently using in-memory mock data (Mongoose listed but not implemented)
-
-## Common Patterns
-- **React Router v5**: Use `<Route>` with `component` prop, not `element` (v6 syntax)
-- **Async Controllers**: All controller methods are `async` and return `Promise<void>`
-- **Middleware Chain**: `cors` → `bodyParser` → `routes` → `errorHandler`
+- `/api/chat` — General AI chat
+- `/api/travel/checklist` — Generate structured travel plan
+- `/api/travel/regulations` — Regulation summary (placeholder)
+- `/api/travel/documents` — Document explainer (placeholder)
+- `/api/regulations/query` — RAG regulation lookup
+- `/api/community/posts` — Community posts
+- `/api/notifications` — Notifications

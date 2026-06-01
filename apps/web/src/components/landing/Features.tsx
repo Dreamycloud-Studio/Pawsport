@@ -1,71 +1,74 @@
 import React from 'react';
-import { Sparkles, Users } from 'lucide-react';
-import { Badge } from '../ui';
 import { mascots } from '../../assets/images';
 
-const features = [
-  {
-    icon: Sparkles,
-    title: 'AI Travel Planning',
-    description: 'Our AI creates custom travel plans with all documents, flights, and requirements for your destination.',
-    color: 'from-brand-purple-400 to-brand-pink-400',
-    bgColor: 'bg-brand-purple-50',
-  },
-  {
-    icon: Users,
-    title: 'Community Wall',
-    description: 'Share your pet travel stories, photos, and tips with other pet parents around the world!',
-    color: 'from-brand-orange-400 to-brand-pink-400',
-    bgColor: 'bg-brand-orange-50',
-  },
+const STEPS = [
+  { n: '01', title: 'Tell us about your pet', body: 'Species, weight, microchip status. 30 seconds.' },
+  { n: '02', title: 'Pick a destination',     body: 'Browse 84 countries — or ask the AI which route is easiest.' },
+  { n: '03', title: 'Get a dated plan',        body: 'Vet visits, papers, flights, prep. All scheduled, all explained.' },
+  { n: '04', title: 'Refer to it, six weeks long', body: 'Your checklist auto-saves and can be shared with your vet.' },
 ];
 
 const Features: React.FC = () => {
   return (
-    <section id="features" className="py-20 md:py-32 bg-gradient-to-b from-white to-brand-orange-50">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <Badge variant="purple" className="mb-4">
-            ✨ What We Offer ✨
-          </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Everything You Need in{' '}
-            <span className="bg-gradient-to-r from-brand-orange-500 to-brand-pink-500 bg-clip-text text-transparent">
-              One Place
-            </span>
-          </h2>
-        </div>
-
-        {/* Feature Cards */}
-        <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className={`p-12 rounded-3xl ${feature.bgColor} border-2 border-white hover:shadow-xl transition-all duration-300 hover:-translate-y-2 text-center`}
+    <section className="bg-white border-y border-calm-sand px-6 py-16 md:px-12 md:py-28">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-12 gap-12">
+          {/* Left — heading + mascot */}
+          <div className="md:col-span-5">
+            <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-calm-clay font-bold mb-4">
+              <span className="w-8 h-px bg-calm-clay" />
+              How it works
+            </div>
+            <h2
+              className="font-bold text-calm-charcoal mb-5 text-4xl md:text-6xl"
+              style={{ letterSpacing: '-0.025em' }}
             >
-              <div className={`w-20 h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg transform rotate-3 hover:rotate-6 transition-transform mx-auto`}>
-                <feature.icon className="w-10 h-10 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4">{feature.title}</h3>
-              <p className="text-gray-600 text-lg">{feature.description}</p>
-            </div>
-          ))}
-        </div>
+              A plan you can{' '}
+              <span className="italic" style={{ color: '#5b6f4c' }}>
+                follow
+              </span>
+              .
+            </h2>
+            <p className="text-calm-charcoal/70 mb-6 max-w-md">
+              Pet relocation has ~40 dependent tasks. We linearize them into one quiet, weekly cadence.
+            </p>
 
-        {/* Mascot Decoration */}
-        <div className="mt-16 flex justify-center">
-          <div className="relative">
-            <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-brand-orange-200 max-w-xs transform hover:scale-105 transition-transform">
-              <img
-                src={mascots.happy}
-                alt="Pawsport mascot ready for adventure"
-                className="w-full h-auto"
-              />
+            <div className="relative w-full max-w-[260px]">
+              <div className="bg-white rounded-3xl border-4 border-calm-sand shadow-lift p-4">
+                <img
+                  src={mascots.suitcase}
+                  alt="Pet with suitcase"
+                  className="w-full h-auto"
+                  draggable="false"
+                />
+              </div>
             </div>
-            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-brand-orange-400 to-brand-pink-400 text-white px-4 py-2 rounded-full shadow-lg transform rotate-6 animate-pulse">
-              <span className="text-sm font-medium">Let's go! ✈️</span>
-            </div>
+          </div>
+
+          {/* Right — numbered steps */}
+          <div className="md:col-span-7 space-y-4">
+            {STEPS.map((s) => (
+              <div
+                key={s.n}
+                className="flex gap-5 bg-calm-cream rounded-3xl p-6 border border-calm-sand hover:bg-white transition-colors"
+              >
+                <div
+                  className="flex-shrink-0 text-2xl font-bold text-calm-terracotta tabular-nums"
+                  style={{ letterSpacing: '-0.02em' }}
+                >
+                  {s.n}
+                </div>
+                <div>
+                  <h3
+                    className="text-xl font-bold text-calm-charcoal mb-1.5"
+                    style={{ letterSpacing: '-0.01em' }}
+                  >
+                    {s.title}
+                  </h3>
+                  <p className="text-calm-charcoal/70">{s.body}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

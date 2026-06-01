@@ -22,3 +22,9 @@ Thumbs.db
 .vercel
 .env*.local
 supabase/migrations/20260411000001_readonly_role.sql
+
+# Tooling / local artifacts
+.turbo/
+.claude/
+designs/
+*.zip
