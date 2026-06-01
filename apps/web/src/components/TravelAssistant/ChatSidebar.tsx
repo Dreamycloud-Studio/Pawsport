@@ -3,18 +3,6 @@ import { PawPrint, Pencil, Plus, Trash2 } from 'lucide-react';
 
 type TripStatus = 'draft' | 'in_progress' | 'completed';
 
-type TripUpdate = {
-  petName?: string;
-  petEmoji?: string;
-  species?: string;
-  breed?: string;
-  origin?: string;
-  destination?: string;
-  travelDate?: string;
-  vaccinationStatus?: string;
-  status?: TripStatus;
-};
-
 interface SidebarTrip {
   id: string;
   petName: string;
@@ -36,7 +24,7 @@ interface ChatSidebarProps {
   activeId?: string;
   onSelect?: (id: string) => void;
   onCreateTrip?: () => void;
-  onUpdateTrip?: (id: string, updates: TripUpdate) => void;
+  onEditTrip?: (id: string) => void;
   onDeleteTrip?: (id: string) => void;
   userName?: string;
   userSub?: string;
@@ -47,7 +35,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   activeId = '',
   onSelect,
   onCreateTrip,
-  onUpdateTrip,
+  onEditTrip,
   onDeleteTrip,
   userName = 'Sara K.',
   userSub = 'Free plan · 2 trips',
@@ -65,46 +53,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     });
     return Array.from(grouped.values());
   }, [trips]);
-
-  const editTrip = (trip: SidebarTrip) => {
-    const origin = window.prompt('Origin city/country', trip.origin);
-    if (origin === null) return;
-    const destination = window.prompt('Destination city/country', trip.destination);
-    if (destination === null) return;
-    const petName = window.prompt('Pet name', trip.petName);
-    if (petName === null) return;
-    const breed = window.prompt('Pet breed', trip.breed);
-    if (breed === null) return;
-    const travelDateInput = window.prompt(
-      'Travel date (YYYY-MM-DD)',
-      trip.travelDate.slice(0, 10)
-    );
-    if (travelDateInput === null) return;
-    const statusInput = window.prompt(
-      'Status (draft, in_progress, completed)',
-      trip.status
-    );
-    if (statusInput === null) return;
-
-    const parsedTravelDate = new Date(travelDateInput);
-    const normalizedTravelDate = Number.isNaN(parsedTravelDate.getTime())
-      ? trip.travelDate
-      : parsedTravelDate.toISOString();
-
-    const normalizedStatus =
-      statusInput === 'draft' || statusInput === 'in_progress' || statusInput === 'completed'
-        ? statusInput
-        : trip.status;
-
-    onUpdateTrip?.(trip.id, {
-      origin: origin.trim() || trip.origin,
-      destination: destination.trim() || trip.destination,
-      petName: petName.trim() || trip.petName,
-      breed: breed.trim() || trip.breed,
-      travelDate: normalizedTravelDate,
-      status: normalizedStatus,
-    });
-  };
 
   const removeTrip = (trip: SidebarTrip) => {
     const confirmed = window.confirm(`Delete ${trip.route} for ${trip.petName}?`);
@@ -192,7 +140,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   {t.petName} · {t.when}
                 </button>
                 <button
-                  onClick={() => editTrip(t)}
+                  onClick={() => onEditTrip?.(t.id)}
                   className="w-6 h-6 rounded-full hover:bg-gray-100 text-gray-500 flex items-center justify-center"
                   aria-label="Edit trip"
                 >

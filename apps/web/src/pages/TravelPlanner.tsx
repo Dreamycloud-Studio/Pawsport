@@ -5,22 +5,15 @@ import { PlannerTrip, StructuredTravelPlan, TripStatus } from '../types';
 import ChatSidebar from '../components/TravelAssistant/ChatSidebar';
 import AITravelChat from '../components/TravelAssistant/AITravelChat';
 import PlanPanel from '../components/TravelAssistant/PlanPanel';
+import ActiveTripsTimelineTab from '../components/TravelAssistant/ActiveTripsTimelineTab';
 import { createDraftTrip, loadTripPlannerData, saveTripPlannerData } from '../lib/tripStorage';
+import TripCreationModal, {
+  CreateTripPayload,
+} from '../components/TravelAssistant/TripCreationModal';
+import TripEditModal, { TripUpdate } from '../components/TravelAssistant/TripEditModal';
+import { usePets } from '../hooks/usePets';
 
-type TripUpdate = Partial<
-  Pick<
-    PlannerTrip,
-    | 'petName'
-    | 'petEmoji'
-    | 'species'
-    | 'breed'
-    | 'origin'
-    | 'destination'
-    | 'travelDate'
-    | 'vaccinationStatus'
-    | 'status'
-  >
->;
+type MainTab = 'assistant' | 'timeline';
 
 const STATUS_LABELS: Record<TripStatus, string> = {
   draft: 'Draft',
@@ -61,6 +54,11 @@ const TravelPlanner: React.FC = () => {
   );
   const [activeTripId, setActiveTripId] = useState('');
   const [contextRevision, setContextRevision] = useState(0);
+  const [mainTab, setMainTab] = useState<MainTab>('assistant');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingTripId, setEditingTripId] = useState('');
+
+  const { pets, isLoading: isLoadingPets, error: petsError, createPet } = usePets(user?.id);
 
   const displayName: string = user?.user_metadata?.display_name || '';
   const initials = displayName
@@ -81,9 +79,7 @@ const TravelPlanner: React.FC = () => {
 
   useEffect(() => {
     if (!trips.length) {
-      const seed = createDraftTrip();
-      setTrips([seed]);
-      setActiveTripId(seed.id);
+      setActiveTripId('');
       return;
     }
 
@@ -129,11 +125,36 @@ const TravelPlanner: React.FC = () => {
     [trips, plansByTripId]
   );
 
-  const handleCreateTrip = () => {
-    const draftTrip = createDraftTrip();
+  const activeTrips = useMemo(() => trips.filter((trip) => trip.status !== 'completed'), [trips]);
+
+  const handleCreateTrip = (payload: CreateTripPayload) => {
+    const draftTrip = createDraftTrip({
+      petName: payload.petName,
+      petEmoji: payload.petEmoji,
+      species: payload.species,
+      breed: payload.breed,
+      origin: payload.origin,
+      destination: payload.destination,
+      travelDate: payload.travelDate,
+      vaccinationStatus: payload.vaccinationStatus,
+      status: payload.status,
+    });
+
     setTrips((prev) => [draftTrip, ...prev]);
     setActiveTripId(draftTrip.id);
     setContextRevision((prev) => prev + 1);
+  };
+
+  const handleOpenCreateTrip = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleOpenEditTrip = (tripId: string) => {
+    setEditingTripId(tripId);
+  };
+
+  const handleCloseEditTrip = () => {
+    setEditingTripId('');
   };
 
   const handleSelectTrip = (tripId: string) => {
@@ -159,13 +180,27 @@ const TravelPlanner: React.FC = () => {
     }
   };
 
+  const handleSetTripStatus = (tripId: string, status: TripStatus) => {
+    setTrips((prev) =>
+      prev.map((trip) =>
+        trip.id === tripId
+          ? {
+              ...trip,
+              status,
+              updatedAt: new Date().toISOString(),
+            }
+          : trip
+      )
+    );
+  };
+
   const handleDeleteTrip = (tripId: string) => {
     const remainingTrips = trips.filter((trip) => trip.id !== tripId);
     if (!remainingTrips.length) {
-      const fallbackTrip = createDraftTrip();
-      setTrips([fallbackTrip]);
+      setTrips([]);
       setPlansByTripId({});
-      setActiveTripId(fallbackTrip.id);
+      setActiveTripId('');
+      setIsCreateModalOpen(true);
       setContextRevision((prev) => prev + 1);
       return;
     }
@@ -242,14 +277,42 @@ const TravelPlanner: React.FC = () => {
     ? `${activeTrip.petName} → ${activeTrip.destination}`
     : 'Select a trip';
 
+  const editingTrip = useMemo(
+    () => trips.find((trip) => trip.id === editingTripId) || null,
+    [trips, editingTripId]
+  );
+
   return (
-    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+    <>
+      <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       {/* Top breadcrumb bar */}
       <div className="px-5 py-3 bg-white border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <button className="hover:text-gray-900">My Trips</button>
           <ChevronRight size={12} />
           <span className="text-gray-900 font-semibold">{activeTripLabel}</span>
+        </div>
+        <div className="ml-4 inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 p-1 text-xs">
+          <button
+            onClick={() => setMainTab('assistant')}
+            className={`px-3 py-1 rounded-full font-semibold transition ${
+              mainTab === 'assistant'
+                ? 'bg-gradient-to-r from-orange-400 to-pink-400 text-white'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Assistant
+          </button>
+          <button
+            onClick={() => setMainTab('timeline')}
+            className={`px-3 py-1 rounded-full font-semibold transition ${
+              mainTab === 'timeline'
+                ? 'bg-gradient-to-r from-orange-400 to-pink-400 text-white'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Timeline
+          </button>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <button className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100">
@@ -267,17 +330,29 @@ const TravelPlanner: React.FC = () => {
           activeId={activeTripId}
           trips={sidebarTrips}
           onSelect={handleSelectTrip}
-          onCreateTrip={handleCreateTrip}
-          onUpdateTrip={handleUpdateTrip}
+          onCreateTrip={handleOpenCreateTrip}
+          onEditTrip={handleOpenEditTrip}
           onDeleteTrip={handleDeleteTrip}
           userName={displayName || 'Sara K.'}
           userSub={`Free plan · ${trips.length} trip${trips.length === 1 ? '' : 's'}`}
         />
-        <AITravelChat
-          onPlanGenerated={handlePlanGenerated}
-          activeTrip={activeTrip}
-          contextRevision={contextRevision}
-        />
+        <div className={`flex-1 min-w-0 ${mainTab === 'assistant' ? 'flex' : 'hidden'}`}>
+          <AITravelChat
+            onPlanGenerated={handlePlanGenerated}
+            activeTrip={activeTrip}
+            contextRevision={contextRevision}
+          />
+        </div>
+        <div className={`flex-1 min-w-0 ${mainTab === 'timeline' ? 'flex' : 'hidden'}`}>
+          <ActiveTripsTimelineTab
+            activeTrip={activeTrip}
+            plan={activePlan}
+            activeTrips={activeTrips}
+            onSelectTrip={handleSelectTrip}
+            onToggleTask={handleToggleChecklistTask}
+            onSetTripStatus={handleSetTripStatus}
+          />
+        </div>
         <PlanPanel
           plan={activePlan}
           tripLabel={activeTripLabel}
@@ -285,7 +360,27 @@ const TravelPlanner: React.FC = () => {
           onToggleTask={handleToggleChecklistTask}
         />
       </div>
-    </div>
+
+      </div>
+
+      <TripCreationModal
+        isOpen={isCreateModalOpen}
+        pets={pets}
+        isLoadingPets={isLoadingPets}
+        petsError={petsError}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateTrip={handleCreateTrip}
+        onCreatePet={createPet}
+      />
+
+      <TripEditModal
+        isOpen={Boolean(editingTripId)}
+        trip={editingTrip}
+        pets={pets}
+        onClose={handleCloseEditTrip}
+        onSave={handleUpdateTrip}
+      />
+    </>
   );
 };
 

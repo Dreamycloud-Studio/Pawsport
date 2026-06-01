@@ -102,7 +102,7 @@ export function saveTripPlannerData(data: PlannerStoredData): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
 }
 
-export function createDraftTrip(): PlannerTrip {
+export function createDraftTrip(overrides: Partial<PlannerTrip> = {}): PlannerTrip {
   const now = new Date();
   return {
     id: `trip_${now.getTime()}`,
@@ -117,5 +117,6 @@ export function createDraftTrip(): PlannerTrip {
     status: 'draft',
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
+    ...overrides,
   };
 }
