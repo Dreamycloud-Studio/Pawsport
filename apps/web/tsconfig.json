@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "target": "es5",
     "lib": [
       "dom",
@@ -18,11 +19,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "paths": {
-      "@pawsport/core": ["../../packages/core/src/index.ts"]
-    }
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "src"
